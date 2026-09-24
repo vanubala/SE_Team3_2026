@@ -12,7 +12,7 @@ A platform for managing parcel delivery and collection through shared lockers.
 
 | Name | GitHub username |
 | Vanathy BALACHANDRAN | vanubala |
-| [Member 1] | [@username] |
+| WAICMAN GONCALVES Andres | andresgit763 |
 | [Member 2] | [@username] |
 | [Member 3] | [@username] |
 | [Member 4] | [@username] |
