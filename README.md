@@ -14,7 +14,7 @@ A platform for managing parcel delivery and collection through shared lockers.
 | Vanathy BALACHANDRAN | vanubala |
 | WAICMAN GONCALVES Andres | andresgit763 |
 | Christos NASOPOULOS | chris4nas |
-| [Member 3] | [@username] |
+| Vasileios PANDIS | vasilispandis |
 | [Member 4] | [@username] |
 | [Member 5] | [@username] |
 
