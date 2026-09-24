@@ -20,4 +20,4 @@ A platform for managing parcel delivery and collection through shared lockers.
 
 ## Planning
 
-**GitHub Project URL:** https://github.com/vanubala/SE_Team3_2026
+**GitHub Project URL:** https://github.com/users/vanubala/projects/1
