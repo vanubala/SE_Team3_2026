@@ -19,7 +19,7 @@ A platform for managing parcel delivery and collection through shared lockers.
 
 | Vasileios PANDIS | vasilispandis |
 
-| [Member 5] | [@username] |
+| Raed CHAUDRY | RJawad1223 |
 
 ## Planning
 
