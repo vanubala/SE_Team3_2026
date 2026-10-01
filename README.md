@@ -17,6 +17,7 @@ A platform for managing parcel delivery and collection through shared lockers.
 | Christos NASOPOULOS | chris4nas | Authentification |
 | Vasileios PANDIS | vasilispandis | Database |
 | Raed CHAUDRY | RJawad1223 | Interactive features |
+| Serhii ILLARIONOV | woodstockdelirium | Interactive features |
 
 ## Planning
 
