@@ -10,7 +10,7 @@ A platform for managing parcel delivery and collection through shared lockers.
 
 ## Team members
 
-| Name | GitHub username | GitHub username |
+| Name | GitHub username | Responsible for |
 | :--- | :--- | :--- |
 | Vanathy BALACHANDRAN | vanubala | Frontend |
 | WAICMAN GONCALVES Andres | andresgit763 | Backend |
