@@ -30,3 +30,13 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 
 
 
+### Non-functional requirements
+
+| ID | Requirement |
+|---|---|
+| NFR_01 | All login endpoints must be secure. |
+| NFR_02 | If a user deletes their account, their data must be removed from the system database within 24 hours. |
+| NFR_03 | Encrypt customs-relevant backlogs in accordance with GDPR requirements. |
+| NFR_04 | Page loads and searches must respond in < 2 seconds for 95% of requests under normal load. |
+| NFR_05 | A compartment must open in < 3 seconds after a valid pickup code is entered. |
+| NFR_06 | Pickup codes must be random, unique and single-use, becoming invalid after collection or expiry. Code entry must be locked for 15 minutes after 5 incorrect attempts. |
