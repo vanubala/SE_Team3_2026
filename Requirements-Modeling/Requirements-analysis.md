@@ -1,4 +1,4 @@
-Stakeholders:
+# Stakeholders:
 
 Primary: Courier (Requirement provider, validator), Recipient (Requirement provider, validator, Administrator (Requirement provider, decision-maker, validator)
 Secondary: Host businesses (Requirement provider, constraint source), Senders (Requirement provider, validator)
