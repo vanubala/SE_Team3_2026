@@ -107,3 +107,18 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 | R10 | Track a Parcel | As a parcel recipient, I want to track my parcel, so that I can follow its progress until it is ready for collection. |
 | R11 | Extend Pickup Time | As a parcel recipient, I want to request an extension to my pickup deadline, so that I have more time to collect my parcel when necessary. |
 | R12 | Send or Return a Parcel | As a parcel recipient, I want to send or return an eligible parcel using a locker, so that I can send it back without visiting a staffed service point. |
+
+### Administrator User Stories
+
+| ID | User Story | Description |
+|---|---|---|
+| A1 | Monitor Locker Availability | As an administrator, I want to monitor locker availability, so that I can see which lockers are available, occupied, or full. |
+| A2 | Monitor Operational Status | As an administrator, I want to monitor the operational status of lockers, so that I can identify lockers that are broken, offline, unavailable, or require maintenance. |
+| A3 | Mark a Locker as Unavailable | As an administrator, I want to mark a locker as unavailable or under maintenance, so that couriers cannot assign parcels to a locker that should not be used. |
+| A4 | Restore a Locker to Service | As an administrator, I want to mark a repaired locker as operational again, so that it becomes available for parcel deliveries. |
+| A5 | View Support Requests | As an administrator, I want to view support requests submitted by couriers and recipients, so that I can identify and respond to reported problems. |
+| A6 | Manage Locker Issues | As an administrator, I want to update the status of reported locker issues, so that problems can be tracked from the initial report until they are resolved. |
+| A7 | View Parcel History | As an administrator, I want to view the delivery and collection history of a parcel, so that I can investigate problems and verify what happened to it. |
+| A8 | View Locker History | As an administrator, I want to view the usage and maintenance history of a locker, so that I can investigate recurring problems and monitor its operation. |
+| A9 | Monitor Occupancy | As an administrator, I want to see how many compartments at each locker location are occupied or available, so that I can monitor locker capacity. |
+| A10 | View Expired Pickups | As an administrator, I want to see parcels that have passed their pickup deadline, so that the appropriate next action can be taken. |
