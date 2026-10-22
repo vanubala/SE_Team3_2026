@@ -96,6 +96,8 @@
 
 ## 3. Administrator Use Cases
 
+### Use Case: Authentification
+
 | Use Case Name | Authentication |
 |---|---|
 | Actors | **Primary:** Administrator<br>**Secondary:** System App |
@@ -103,6 +105,8 @@
 | Main Success Scenario | 1. Administrator opens app<br>2. Administrator enters his login credentials<br>3. Administrator accesses the portal |
 | Extensions | Invalid credentials |
 | Postconditions | Administrator can visualise the locker availabilities, receive the operational status and change the lockers' status |
+
+### Use Case: Visualise the Locker Availabilities
 
 | Use Case Name | Visualise the Locker Availabilities |
 |---|---|
@@ -112,6 +116,8 @@
 | Extensions | **3a. Status data cannot be loaded**<br>1. System shows the last known status with the time of the last update<br><br>**4a. Administrator sees lockers that are broken, offline, or require maintenance**<br>1. System highlights these lockers with a warning status<br>2. Administrator can open the locker details or change its status |
 | Postconditions | Administrator has up-to-date information about available lockers and compartments at each location |
 
+### Use Case: Receive Operational Status
+
 | Use Case Name | Receive Operational Status |
 |---|---|
 | Actors | **Primary:** Administrator<br>**Secondary:** System App, Hardware Locker, Courier, Recipient |
@@ -119,6 +125,8 @@
 | Main Success Scenario | 1. Hardware locker sends its operational data to the system<br>2. System analyses the data and updates the locker status<br>3. System sends an operational status notification to the administrator<br>4. Administrator opens the notification in the portal<br>5. Administrator views the locker concerned, the type of issue and when it was detected<br>6. Administrator acknowledges the notification |
 | Extensions | **1a. Courier or recipient reports a fault**<br>1. System records the report and links it to the locker concerned<br>2. System notifies the administrator (continue at step 4)<br><br>**1b. Locker is offline and sends no data**<br>1. System detects the missing signal after a set time<br>2. System marks the locker as offline and notifies the administrator |
 | Postconditions | Administrator is informed of the operational status of the lockers and can decide whether a locker status must be changed (e.g. set to maintenance) |
+
+### Use Case: Change the Locker Status
 
 | Use Case Name | Change the Locker Status |
 |---|---|
