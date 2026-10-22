@@ -30,7 +30,7 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 
 ## Requirements
 
-### Functional
+### Functional requirements
 
 | ID | Requirement |
 |---|---|
