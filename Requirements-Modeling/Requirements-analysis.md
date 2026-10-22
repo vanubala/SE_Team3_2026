@@ -75,7 +75,7 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 | NFR_06 | Pickup codes must be random, unique and single-use, becoming invalid after collection or expiry. Code entry must be locked for 15 minutes after 5 incorrect attempts. |
 
 
-### Courier User Stories
+## Courier User Stories
 
 | ID | User Story | Description |
 |---|---|---|
