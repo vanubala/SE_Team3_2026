@@ -1,4 +1,4 @@
-# Stakeholders:
+## Stakeholders:
 
 Primary: Courier (Requirement provider, validator), Recipient (Requirement provider, validator, Administrator (Requirement provider, decision-maker, validator)
 Secondary: Host businesses (Requirement provider, constraint source), Senders (Requirement provider, validator)
@@ -15,3 +15,18 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 | Monitor lockers (administrator) | Check availability (FR_25, NFR_04); change locker status |
 | Manage the network (administrator) | Edit locations, compartments and courier accounts (FR_05, FR_11, FR_21, NFR_01) |
 | Send a parcel (sender) | Create the shipment (FR_01, FR_19, FR_23); drop off at a locker (FR_26, FR_27, NFR_05); follow the delivery (FR_03, FR_06); handle returns (FR_04, FR_22, FR_24) |
+
+
+
+## Conflicts
+
+| Conflict | Perspective 1 | Perspective 2 |
+|---|---|---|
+| Pickup deadline | Recipients: long deadlines and extensions. | Management and couriers: compartments freed quickly to keep capacity for new parcels. |
+| Privacy vs investigation | Administrators and customs: full recipient details and long history. | EU: data minimisation and short retention. |
+| Opening hours | Recipients: 24/7 access to their parcel. | Host businesses: access only during their opening hours, no disturbance. |
+| Cost vs quality | Management: low development and operating cost. | Recipients and IT team: SMS alerts, offline locker mode, 99.5% uptime. |
+
+
+
+
