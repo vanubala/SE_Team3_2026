@@ -94,119 +94,39 @@
 | **Postconditions** | System updates delivery status to Completed and the locker is marked as available |
 
 
-## Administrator Use Case Diagram
+## 3. Administrator Use Cases
 
-### Authentication
+| Use Case Name | Authentication |
+|---|---|
+| Actors | **Primary:** Administrator<br>**Secondary:** System App |
+| Preconditions | - Administrator is registered at the delivery company<br>- Administrator has an existing account |
+| Main Success Scenario | 1. Administrator opens app<br>2. Administrator enters his login credentials<br>3. Administrator accesses the portal |
+| Extensions | Invalid credentials |
+| Postconditions | Administrator can visualise the locker availabilities, receive the operational status and change the lockers' status |
 
-**Actors**
-- Primary: Administrator
-- Secondary: System App
+| Use Case Name | Visualise the Locker Availabilities |
+|---|---|
+| Actors | **Primary:** Administrator<br>**Secondary:** System App, Hardware Locker, Courier, Recipient |
+| Preconditions | - Administrator is authenticated<br>- The system contains statuses of all lockers and compartments |
+| Main Success Scenario | 1. Administrator opens the locker overview in the portal<br>2. Administrator selects a location (or all locations)<br>3. System retrieves the current status of every locker and compartment<br>4. System displays the usual statuses of the lockers (available / occupied / full)<br>5. Administrator selects a locker to see its details (free compartments by size, parcels inside) |
+| Extensions | **3a. Status data cannot be loaded**<br>1. System shows the last known status with the time of the last update<br><br>**4a. Administrator sees lockers that are broken, offline, or require maintenance**<br>1. System highlights these lockers with a warning status<br>2. Administrator can open the locker details or change its status |
+| Postconditions | Administrator has up-to-date information about available lockers and compartments at each location |
 
-**Preconditions**
-- Administrator is registered at the delivery company
-- Administrator has an existing account
+| Use Case Name | Receive Operational Status |
+|---|---|
+| Actors | **Primary:** Administrator<br>**Secondary:** System App, Hardware Locker, Courier, Recipient |
+| Preconditions | - Administrator is authenticated<br>- Hardware lockers are connected to the system and regularly send their operational data (connection, doors, sensors) |
+| Main Success Scenario | 1. Hardware locker sends its operational data to the system<br>2. System analyses the data and updates the locker status<br>3. System sends an operational status notification to the administrator<br>4. Administrator opens the notification in the portal<br>5. Administrator views the locker concerned, the type of issue and when it was detected<br>6. Administrator acknowledges the notification |
+| Extensions | **1a. Courier or recipient reports a fault**<br>1. System records the report and links it to the locker concerned<br>2. System notifies the administrator (continue at step 4)<br><br>**1b. Locker is offline and sends no data**<br>1. System detects the missing signal after a set time<br>2. System marks the locker as offline and notifies the administrator |
+| Postconditions | Administrator is informed of the operational status of the lockers and can decide whether a locker status must be changed (e.g. set to maintenance) |
 
-**Main Success Scenario**
-1. Administrator opens app
-2. Administrator enters his login credentials
-3. Administrator accesses the portal
-
-**Extensions**
-- Invalid credentials
-
-**Postconditions**
-- Administrator can visualise the locker availabilities, receive the operational status and change the lockers' status
-
----
-
-### Visualise the Locker Availabilities
-
-**Actors**
-- Primary: Administrator
-- Secondary: System App, Hardware Locker, Courier, Recipient
-
-**Preconditions**
-- Administrator is authenticated
-- The system contains statuses of all lockers and compartments
-
-**Main Success Scenario**
-1. Administrator opens the locker overview in the portal
-2. Administrator selects a location (or all locations)
-3. System retrieves the current status of every locker and compartment
-4. System displays the usual statuses of the lockers (available / occupied / full)
-5. Administrator selects a locker to see its details (free compartments by size, parcels inside)
-
-**Extensions**
-- **3a. Status data cannot be loaded**
-   1. System shows the last known status with the time of the last update
-- **4a. Administrator sees lockers that are broken, offline, or require maintenance**
-   1. System highlights these lockers with a warning status
-   2. Administrator can open the locker details or change its status
-
-**Postconditions**
-- Administrator has up-to-date information about available lockers and compartments at each location
-
----
-
-### Receive Operational Status
-
-**Actors**
-- Primary: Administrator
-- Secondary: System App, Hardware Locker, Courier, Recipient
-
-**Preconditions**
-- Administrator is authenticated
-- Hardware lockers are connected to the system and regularly send their operational data (connection, doors, sensors)
-
-**Main Success Scenario**
-1. Hardware locker sends its operational data to the system
-2. System analyses the data and updates the locker status
-3. System sends an operational status notification to the administrator
-4. Administrator opens the notification in the portal
-5. Administrator views the locker concerned, the type of issue and when it was detected
-6. Administrator acknowledges the notification
-
-**Extensions**
-- **1a. Courier or recipient reports a fault**
-   1. System records the report and links it to the locker concerned
-   2. System notifies the administrator (continue at step 4)
-- **1b. Locker is offline and sends no data**
-   1. System detects the missing signal after a set time
-   2. System marks the locker as offline and notifies the administrator
-
-**Postconditions**
-- Administrator is informed of the operational status of the lockers and can decide whether a locker status must be changed (e.g. set to maintenance)
-
----
-
-### Change the Locker Status
-
-**Actors**
-- Primary: Administrator
-- Secondary: System App, Hardware Locker
-
-**Preconditions**
-- Administrator is authenticated
-- Administrator gets the current status of the locker
-
-**Main Success Scenario**
-1. Administrator selects a locker or compartment in the portal
-2. System displays its current status
-3. Administrator chooses the new status (available / unavailable / maintenance)
-4. Administrator confirms the change
-5. System saves the new status and sends it to the hardware locker
-6. System confirms the change to the administrator
-
-**Extensions**
-- **4a. Locker still contains parcels**
-   1. System warns the administrator that parcels are inside
-   2. Parcels already inside stay available for pickup; no new deliveries are assigned to the locker
-- **5a. Hardware locker does not confirm the change**
-   1. System keeps the previous status and shows an error message
-   2. Administrator retries later or sends a technician on site
-
-**Postconditions**
-- The locker status is updated in the system. Unavailable lockers are no longer offered to couriers when assigning a compartment; available lockers can be assigned again.
+| Use Case Name | Change the Locker Status |
+|---|---|
+| Actors | **Primary:** Administrator<br>**Secondary:** System App, Hardware Locker |
+| Preconditions | - Administrator is authenticated<br>- Administrator gets the current status of the locker |
+| Main Success Scenario | 1. Administrator selects a locker or compartment in the portal<br>2. System displays its current status<br>3. Administrator chooses the new status (available / unavailable / maintenance)<br>4. Administrator confirms the change<br>5. System saves the new status and sends it to the hardware locker<br>6. System confirms the change to the administrator |
+| Extensions | **4a. Locker still contains parcels**<br>1. System warns the administrator that parcels are inside<br>2. Parcels already inside stay available for pickup; no new deliveries are assigned to the locker<br><br>**5a. Hardware locker does not confirm the change**<br>1. System keeps the previous status and shows an error message<br>2. Administrator retries later or sends a technician on site |
+| Postconditions | The locker status is updated in the system. Unavailable lockers are no longer offered to couriers when assigning a compartment; available lockers can be assigned again. |
 
 
 
