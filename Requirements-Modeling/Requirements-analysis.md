@@ -73,3 +73,19 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 | NFR_04 | Page loads and searches must respond in < 2 seconds for 95% of requests under normal load. |
 | NFR_05 | A compartment must open in < 3 seconds after a valid pickup code is entered. |
 | NFR_06 | Pickup codes must be random, unique and single-use, becoming invalid after collection or expiry. Code entry must be locked for 15 minutes after 5 incorrect attempts. |
+
+
+### Courier User Stories
+
+| ID | User Story | Description |
+|---|---|---|
+| C0 | Authenticate Courier | As a courier, I want to authenticate using my delivery company account, so that I can register and deposit parcels. |
+| C1 | Register a Parcel | As a courier, I want to register a parcel in the system, so that it can be recorded and prepared for delivery to a locker. |
+| C2 | View Available Lockers | As a courier, I want to see available lockers and their sizes, so that I can assign a suitable locker for the parcel. |
+| C3 | View Locker Information | As a courier, I want to see the location and opening hours of the assigned locker, so that I can efficiently deliver the parcel. |
+| C4 | Scan Parcel to Deposit | As a courier, I want the assigned locker to open when I scan the parcel at the terminal, so that I can safely deposit the parcel. |
+| C5 | Confirm Parcel Placement | As a courier, I want to confirm that a parcel has been placed inside its assigned locker, so that the system can update the parcel status and notify the recipient. |
+| C6 | Receive a Locker Suggestion | As a courier, I want the system to suggest a suitable available locker based on the parcel size, so that I can quickly choose an appropriate compartment. |
+| C7 | Report and Contact Support | As a courier, I want to contact support, so that I can get help when I experience a problem with a locker or delivery. |
+| C8 | Receive Support Instructions | As a courier, I want to receive clear instructions after reporting a problem, so that I know how to proceed with the issue. |
+| C9 | Collect Parcels | As a courier, I want to collect sent or expired parcels, so that I can bring them to the mailing center. |
