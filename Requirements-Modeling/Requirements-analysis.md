@@ -28,6 +28,39 @@ Hidden: IT operations and development team (Maintainer/operator), locker hardwar
 | Cost vs quality | Management: low development and operating cost. | Recipients and IT team: SMS alerts, offline locker mode, 99.5% uptime. |
 
 
+## Requirements
+
+### Functional requirements
+
+| ID | Requirement |
+|---|---|
+| FR_01 | Users can register with email or phone. |
+| FR_02 | Guest recipients (no account) can collect parcels using only the code sent via SMS/email. |
+| FR_03 | The system should support parcel statuses such as: Registered → In Transit → Ready for Pickup → Collected. |
+| FR_04 | The system should support exceptional statuses such as: Delayed, Customs Hold, Locker Unavailable, Pickup Expired, and Returned to Sender. |
+| FR_05 | Role-based access control: recipient, sender, courier, administrator. |
+| FR_06 | Recipients, senders and administrators can view parcel history, active parcels, and receipts. |
+| FR_07 | Recipient opens the compartment by entering the PIN or tapping "open" in the app via Bluetooth/NFC when on site. |
+| FR_08 | Users can delete their account. |
+| FR_09 | Courier can report exceptions: parcel damaged, doesn't fit, wrong locker, door jammed. |
+| FR_10 | Courier logs in and sees the list of parcels assigned to that locker. |
+| FR_11 | Admins can register a locker site with location (GPS, address), opening hours, access restrictions (e.g. inside a mall), with photos. |
+| FR_12 | A courier can see the locker locations and the free compartments of each size at a location. |
+| FR_13 | Couriers authenticate on the terminal via app QR code, or PIN, tied to their carrier company. |
+| FR_14 | Courier collects expired, returned, or sender-dropped parcels; each removal is scanned and confirmed. |
+| FR_15 | Templates are configurable per language, users can switch the language. |
+| FR_16 | Reminders are sent to recipients before expiry. |
+| FR_17 | Recipient can extend the pickup deadline once (paid option). |
+| FR_18 | An administrator can export the customs records for one parcel or a date range when customs makes an official request. The export contains only the fields customs needs, and each export is logged with who made it, when, and the request reference. |
+| FR_19 | Payment for sending and overdue fees via card. |
+| FR_20 | Cash-on-delivery: pickup is blocked until payment is confirmed in the app or at a terminal card reader. |
+| FR_21 | Configurable pricing per locker, size and region. |
+| FR_22 | When the pickup window ends, the parcel is marked "expired" and added to the courier's collection list. |
+| FR_23 | Integration with SMS/email/push providers and payment gateways. |
+| FR_24 | Refunds for failed or cancelled services. |
+| FR_25 | Automatic alerts on anomalies: door left open, forced opening, offline terminal, power on battery, temperature out of range. |
+| FR_26 | At the terminal, the sender enters the code, the right-size compartment opens, the parcel is deposited, and a receipt is issued. |
+| FR_27 | Allocation picks the smallest compartment that fits, to maximize utilization. |
 
 
 ### Non-functional requirements
