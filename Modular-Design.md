@@ -27,4 +27,6 @@ The courier fills out the information:
    - set the barcode / internal ID as the **tracking number**
    - set the **status** of the parcel to `Registered`
    - set the parcel **deadline**
+   - save the time and date
 5. We then add all of this to our DB of Parcels.
+6. Inform courier that the parcel has been successfully or unsuccessfully registered with feedback on what went wrong in the latter case.
