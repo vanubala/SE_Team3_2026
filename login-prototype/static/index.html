@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in | Smart Parcel Locker</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script type="module" src="/static/login.js"></script>
+</head>
+<body>
+  <main class="auth-page">
+    <section class="brand-panel" aria-label="About this sign-in">
+      <div class="locker-mark" aria-hidden="true"><span></span><span></span><span class="lit"></span><span></span><span></span><span></span></div>
+      <p class="eyebrow">Smart Parcel Locker</p>
+      <h1>One sign-in for everyone</h1>
+      <ul class="audience">
+        <li><strong>Couriers</strong><span>Company ID <code>CO</code> + 5 digits, and your password</span></li>
+        <li><strong>Administrators</strong><span>Company ID <code>AD</code> + 5 digits, and your password</span></li>
+        <li><strong>Senders and recipients</strong><span>Your email or phone number, and a one-time code</span></li>
+      </ul>
+      <p class="brand-foot">SE Team 3 - prototype</p>
+    </section>
+
+    <section class="card" aria-labelledby="title">
+      <p class="eyebrow card-brand">Smart Parcel Locker</p>
+      <h2 id="title">Sign in</h2>
+      <p id="notice" class="message info" hidden></p>
+
+      <form id="identify-form" novalidate>
+        <label for="identifier">Company ID, email or phone number</label>
+        <input id="identifier" name="identifier" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="CO00001, name@example.com or +352 621 ..." required>
+        <p id="kind" class="kind" aria-live="polite"></p>
+        <button type="submit" class="primary">Continue</button>
+      </form>
+
+      <form id="password-form" novalidate hidden>
+        <div class="who"><span>Signing in as <strong id="password-who"></strong></span><button type="button" class="link" data-back>Change</button></div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+        <button type="submit" class="primary">Sign in</button>
+        <p class="hint">Forgot your password? Ask your company administrator.</p>
+      </form>
+
+      <form id="code-form" novalidate hidden>
+        <div class="who"><span>Signing in as <strong id="code-who"></strong></span><button type="button" class="link" data-back>Change</button></div>
+        <p id="code-sent" class="hint"></p>
+        <div id="dev-code" class="dev-code" hidden>
+          <span>Demo only: no SMS or email is sent. Your code is</span>
+          <strong id="dev-code-value"></strong>
+        </div>
+        <label for="code">6-digit code</label>
+        <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+        <button type="submit" class="primary">Verify and sign in</button>
+        <button type="button" id="resend" class="link">Send a new code</button>
+        <p class="hint">No code? Check what you typed, or create an account if you don't have one yet.</p>
+      </form>
+
+      <p id="message" class="message" role="alert" hidden></p>
+
+      <footer class="card-foot">
+        <p>New sender or recipient? <a href="/register">Create an account</a></p>
+        <p class="muted">Courier and administrator accounts are provided by the company.</p>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>

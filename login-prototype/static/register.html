@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create an account | Smart Parcel Locker</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script type="module" src="/static/register.js"></script>
+</head>
+<body>
+  <main class="auth-page">
+    <section class="brand-panel" aria-label="About accounts">
+      <div class="locker-mark" aria-hidden="true"><span></span><span class="lit"></span><span></span><span></span><span></span><span></span></div>
+      <p class="eyebrow">Smart Parcel Locker</p>
+      <h1>Create a sender / recipient account</h1>
+      <ul class="audience">
+        <li><strong>One account for both</strong><span>Send parcels and collect the ones addressed to you</span></li>
+        <li><strong>No password to remember</strong><span>You sign in with a one-time code sent to your email or phone</span></li>
+        <li><strong>Couriers and administrators</strong><span>Use the company ID you were given; those accounts can't be created here</span></li>
+      </ul>
+      <p class="brand-foot">SE Team 3 - prototype</p>
+    </section>
+
+    <section class="card" aria-labelledby="title">
+      <p class="eyebrow card-brand">Smart Parcel Locker</p>
+      <h2 id="title">Create an account</h2>
+
+      <form id="details-form" novalidate>
+        <label for="name">Your name</label>
+        <input id="name" name="name" autocomplete="name" maxlength="80" required>
+        <label for="identifier">Email or phone number</label>
+        <input id="identifier" name="identifier" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="name@example.com or +352 621 123 456" required>
+        <p id="kind" class="kind" aria-live="polite"></p>
+        <button type="submit" class="primary">Send verification code</button>
+      </form>
+
+      <form id="code-form" novalidate hidden>
+        <div class="who"><span>Creating account for <strong id="code-who"></strong></span><button type="button" class="link" id="back">Change</button></div>
+        <p id="code-sent" class="hint"></p>
+        <div id="dev-code" class="dev-code" hidden>
+          <span>Demo only: no SMS or email is sent. Your code is</span>
+          <strong id="dev-code-value"></strong>
+        </div>
+        <label for="code">6-digit code</label>
+        <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+        <button type="submit" class="primary">Verify and create account</button>
+        <button type="button" id="resend" class="link">Send a new code</button>
+      </form>
+
+      <p id="message" class="message" role="alert" hidden></p>
+
+      <footer class="card-foot">
+        <p>Already have an account? <a href="/">Sign in</a></p>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>
