@@ -1,0 +1,65 @@
+@startuml Parcel Registration Sequence Diagram
+title UC1: Register a Parcel (Courier)
+
+actor "Courier" as courier
+boundary "CourierDashboard" as ui <<boundary>>
+control "RegistrationController" as ctrl <<control>>
+entity "RegistrationService" as service <<service>>
+database "ParcelRepository" as repo <<repo>>
+
+courier -> ui: openRegistrationFormAndSubmit(barcode, size, expectedDelivery, notes)
+activate ui
+
+ui -> ctrl: POST /api/parcels (JWT, formPayload)
+activate ctrl
+
+ctrl -> service: registerParcel(formPayload)
+activate service
+
+service -> service: sanitizeAndValidate(barcode, size, expectedDelivery, notes)
+
+alt Validation Fails (missing fields, invalid format/date)
+    service --> ctrl: throw ValidationException(errorDetails)
+    ctrl --> ui: HTTP 400 Bad Request (errorDetails)
+    ui --> courier: displayErrorFeedback(errorDetails)
+
+else Validation Succeeds
+
+    service -> repo: existsByTrackingNumber(barcode)
+    activate repo
+    repo --> service: isDuplicate (boolean)
+    deactivate repo
+
+    alt isDuplicate == true
+        service --> ctrl: throw DuplicateParcelException("Tracking ID already registered")
+        ctrl --> ui: HTTP 409 Conflict ("Tracking ID already exists")
+        ui --> courier: displayErrorFeedback("Parcel already registered")
+
+    else isDuplicate == false
+        service -> service: generateHashedParcelId(barcode)
+        service -> service: initializeParcelEntity(parcelId, trackingNumber=barcode,\nstatus="REGISTERED", pickupDeadline, registeredAt)
+
+        service -> repo: save(parcelEntity)
+        activate repo
+
+        alt Database Save Succeeds
+            repo --> service: savedParcelRecord
+            deactivate repo
+            service --> ctrl: successPayload(SUCCESS, parcelId)
+            ctrl --> ui: HTTP 201 Created (parcelId)
+            ui --> courier: displaySuccessFeedback("Parcel Registered", parcelId)
+
+        else Database Error
+            repo --> service: throw DatabaseException
+            deactivate repo
+            service --> ctrl: throw StorageException("Failed to save parcel")
+            ctrl --> ui: HTTP 500 Internal Server Error
+            ui --> courier: displayErrorFeedback("System error while saving parcel")
+        end
+    end
+end
+
+deactivate service
+deactivate ctrl
+deactivate ui
+@enduml

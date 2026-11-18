@@ -1,0 +1,87 @@
+@startuml Pickup Parcel Sequence Diagram
+title UC4: Collect a Parcel
+
+actor "Guest Recipient" as recipient
+boundary "LockerTerminalUI" as ui <<boundary>>
+control "PickupController" as ctrl <<control>>
+entity "PickupService" as service <<service>>
+database "ParcelRepository" as parcelRepo <<repo>>
+database "LockerRepository" as lockerRepo <<repo>>
+actor "Locker Hardware" as hardware <<Actor>>
+
+recipient -> ui: selectPickupAndEnterCode(pickupCode)
+activate ui
+
+ui -> ctrl: POST /api/pickups (lockerId, pickupCode)
+activate ctrl
+
+ctrl -> service: verifyAndUnlockParcel(lockerId, pickupCode)
+activate service
+
+service -> lockerRepo: checkTerminalLockoutStatus(lockerId)
+activate lockerRepo
+lockerRepo --> service: lockoutStatus (isLocked, failedAttempts)
+deactivate lockerRepo
+
+alt isLocked == true (5 failed attempts within 15 min)
+    service --> ctrl: error("Terminal Locked: Try again in 15 minutes")
+    ctrl --> ui: HTTP 429 Too Many Requests
+    ui --> recipient: displayLockoutScreen(remainingTime)
+
+else isLocked == false
+    service -> parcelRepo: findActiveParcelByCode(lockerId, pickupCode)
+    activate parcelRepo
+    parcelRepo --> service: parcel | null
+    deactivate parcelRepo
+
+    alt parcel != null AND !parcel.isUsed AND !parcel.isExpired
+
+        service -> lockerRepo: resetFailedAttempts(lockerId)
+        activate lockerRepo
+        lockerRepo --> service: counterReset
+        deactivate lockerRepo
+
+        service -> hardware: unlockCompartment(parcel.compartmentId)
+        activate hardware
+        hardware --> service: doorUnlocked
+        deactivate hardware
+
+        service --> ctrl: compartmentOpened(parcel.compartmentId)
+        ctrl --> ui: HTTP 200 OK (compartmentId)
+        ui --> recipient: displayCollectionInstructions(compartmentId)
+
+        recipient -> hardware: retrieveParcelAndCloseDoor()
+        activate hardware
+        hardware -> service: sensorDoorClosedAndEmpty(parcel.compartmentId)
+        deactivate hardware
+
+        service -> parcelRepo: markCollectedAndInvalidateCode(parcel.parcelId, collectedAt)
+        activate parcelRepo
+        parcelRepo --> service: parcelUpdated
+        deactivate parcelRepo
+
+        service -> lockerRepo: updateCompartmentStatus(parcel.compartmentId, "AVAILABLE")
+        activate lockerRepo
+        lockerRepo --> service: compartmentReleased
+        deactivate lockerRepo
+
+        service --> ctrl: collectionCompleted(parcel.parcelId)
+        ctrl --> ui: HTTP 200 OK ("Collection Confirmed")
+        ui --> recipient: displayThankYouScreen()
+
+    else Invalid / Expired / Already Used Code
+        service -> lockerRepo: incrementFailedAttempts(lockerId)
+        activate lockerRepo
+        lockerRepo --> service: updatedAttempts (remainingAttempts)
+        deactivate lockerRepo
+
+        service --> ctrl: error("Invalid Pickup Code", remainingAttempts)
+        ctrl --> ui: HTTP 401 Unauthorized (remainingAttempts)
+        ui --> recipient: displayInvalidCodeError(remainingAttempts)
+    end
+end
+
+deactivate service
+deactivate ctrl
+deactivate ui
+@enduml
