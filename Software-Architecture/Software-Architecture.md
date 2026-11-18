@@ -15,6 +15,16 @@ Reliability is core to our system. Because the platform coordinates couriers, gu
 Usability is essential for a frictionless delivery and pickup experience. In the MVP, recipients operate as guests with zero registration overhead: they receive a single-use pickup PIN/QR code and station details via SMS/email (**FR_01**, **FR_07**) and complete collection at the terminal in two steps—entering the code and retrieving the parcel (**FR_08**). For couriers, the system automatically suggests the smallest suitable compartment based on parcel size (**FR_04**, **C6**) and allows direct deposit at the kiosk by scanning the Parcel ID (**FR_06**). To prevent queues at physical terminals, portal pages respond in under 2 seconds (**NFR_05**) and compartment doors unlock within 3 seconds of a valid code or Parcel ID scan (**NFR_03**). Where usability conflicts with security—such as enforcing a 15-minute lockout after 5 wrong PIN attempts—we prioritize security, reflecting the architectural trade-off that not all quality attributes can be maximized simultaneously.
 
 
+### Trade-offs : 
+* **Security vs. Usability :**
+  * Requiring recipients to complete multi-factor login slows down physical parcel pickup, whereas completely unauthenticated terminal access risks unauthorized compartment openings.
+  * In the MVP, we maximize usability by allowing guest recipients to collect parcels in two steps without creating an account, using a single-use PIN or QR code (**FR_02**). To preserve security (**NFR_02**), pickup codes are generated with high entropy, invalidated upon door closure, and protected by a strict lockout after repeated failed attemps.
+
+* **Performance vs. Decoupling :**
+  * Physical door-unlock and deposit confirmations must feel instantaneous (**NFR_03**), while external SMS/email providers introduce unpredictable network latency and occasional outages.
+  * We keep physical terminal commands synchronous over HTTPS/REST for immediate feedback, while offloading notification dispatch (**FR_07**), expiry reminders (**FR_12**), and telemetry alerts (**FR_15**) to asynchronous Event-Driven handlers.
+
+
 ## Software Architecture
 To satisfy our stakeholders' top three quality attributes (see above) while fitting the constraints of a 6-people team, our Smart Parcel Locker System adopts a hybrid architectural style : a Layered Client-Server Architecture with Event-Driven Elements : 
 - Client-Server (Overall System): multiple clients (Courier Dashboard, Recipient Portal, Admin View and Physical Locker) communicate over HTTPS/REST API with a shared backend server and database. They need real-time access to compartment availabity and parcel status, but they shoudn't have access to the database directly.

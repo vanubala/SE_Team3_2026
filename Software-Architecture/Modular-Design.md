@@ -38,7 +38,7 @@ Enforces validation, data manipulation and domain constraints rules :
 
 
 #### 3. Data Access Layer (`ParcelRepository`)
-1. Receives the initialized `Parcel` entity from `ParcelService`.
+1. Receives the initialized `Parcel` entity from `RegistrationService`.
 2. Saves the record directly into the `Parcels` database table/collection.
 - **On Success:** Returns the confirmed stored entity record back to the service layer.
 - **On Error:** Returns a error response, which the service layer catches to generate readable feedback for the UI.
