@@ -1,0 +1,26 @@
+@startuml Courier Use Cases
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Courier" as courier
+actor "Hardware Locker" as hardware <<Actor>>
+
+rectangle "Smart Parcel Locker System" {
+    usecase "Authenticate Courier" as UC_Auth
+    usecase "Register Parcel" as UC_Reg
+    usecase "Assign Compartment" as UC_Assign
+    usecase "Deposit Parcel" as UC_Deposit
+    usecase "Report Deposit Exception" as UC_Report
+}
+
+courier --> UC_Reg
+courier --> UC_Assign
+courier --> UC_Deposit
+
+UC_Reg ..> UC_Auth : <<include>>
+UC_Assign ..> UC_Auth : <<include>>
+
+UC_Report ..> UC_Deposit : <<extend>>\n(if door jammed or size mismatch)
+
+UC_Deposit --> hardware
+@enduml

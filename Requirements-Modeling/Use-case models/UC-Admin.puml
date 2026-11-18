@@ -1,0 +1,31 @@
+@startuml Admin Use Cases
+top to bottom direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+actor "Administrator" as admin
+actor "Hardware Locker" as hardware <<Actor>>
+actor "Maintenance Team" as maint <<Actor>>
+
+rectangle "Smart Parcel Locker System" {
+    usecase "Authenticate Admin" as UC_Auth
+    usecase "Visualise Locker Availabilities" as UC_Vis
+    usecase "Receive Operational Status" as UC_OpStatus
+    usecase "Change Locker Status" as UC_ChangeStatus
+    usecase "Report to Maintenance Team" as UC_Maint
+}
+
+admin --> UC_Vis
+admin --> UC_OpStatus
+admin --> UC_ChangeStatus
+
+UC_Vis ..> UC_Auth : <<include>>
+UC_OpStatus ..> UC_Auth : <<include>>
+UC_ChangeStatus ..> UC_Auth : <<include>>
+
+UC_Maint ..> UC_OpStatus : <<extend>>\n(if hardware fault detected)
+
+UC_OpStatus --> hardware
+UC_ChangeStatus --> hardware
+UC_Maint --> maint
+@enduml

@@ -1,0 +1,66 @@
+@startuml System Use Cases
+title System Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+actor "Courier" as courier
+actor "Recipient" as recipient
+actor "Administrator" as admin
+
+actor "Hardware Locker" as hardware <<Actor>>
+actor "Notification Gateway" as notif <<Service>>
+actor "Maintenance Team" as maint <<Actor>>
+
+rectangle "Smart Parcel Locker System" {
+    usecase "Register Parcel" as UC_Reg
+    usecase "Assign Compartment" as UC_Assign
+    usecase "Deposit Parcel" as UC_Deposit
+    usecase "Pickup Parcel" as UC_Pickup
+    usecase "Track Parcel" as UC_Track
+
+    usecase "Dispatch Pickup\nNotification & Code" as UC_Notif
+    usecase "Visualise Locker\nAvailabilities" as UC_Vis
+    usecase "Receive Operational\nStatus" as UC_OpStatus
+    usecase "Change Locker Status" as UC_ChangeStatus
+
+    usecase "Authenticate User" as UC_Auth
+    usecase "Report Issue /\nException" as UC_Report
+    usecase "Report to\nMaintenance Team" as UC_Maint
+}
+
+courier --> UC_Reg
+courier --> UC_Assign
+courier --> UC_Deposit
+
+recipient --> UC_Pickup
+recipient --> UC_Track
+
+admin --> UC_Vis
+admin --> UC_OpStatus
+admin --> UC_ChangeStatus
+
+UC_Reg ..> UC_Auth : <<include>>
+UC_Assign ..> UC_Auth : <<include>>
+UC_Track ..> UC_Auth : <<include>>
+UC_Vis ..> UC_Auth : <<include>>
+UC_OpStatus ..> UC_Auth : <<include>>
+UC_ChangeStatus ..> UC_Auth : <<include>>
+
+
+UC_Deposit ..> UC_Notif : <<include>>
+
+UC_Report ..> UC_Deposit : <<extend>>\n(deposit issue)
+UC_Report ..> UC_Pickup : <<extend>>\n(pickup issue)
+UC_Maint ..> UC_OpStatus : <<extend>>\n(hardware fault)
+
+UC_Deposit --> hardware
+UC_Pickup --> hardware
+UC_OpStatus --> hardware
+UC_ChangeStatus --> hardware
+
+UC_Notif --> notif
+UC_Maint --> maint
+
+@enduml

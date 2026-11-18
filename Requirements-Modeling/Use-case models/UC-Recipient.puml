@@ -1,0 +1,27 @@
+@startuml Recipient Use Cases
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Recipient" as recipient
+actor "Locker Hardware" as hardware <<Actor>>
+actor "Notification Gateway" as notif <<Service>>
+
+rectangle "Smart Parcel Locker System" {
+    usecase "Pickup Parcel" as UC_Pickup
+    usecase "Track Parcel" as UC_Track
+    usecase "Authenticate Recipient" as UC_Auth
+    usecase "Send Pickup Notification & Code" as UC_Notif
+    usecase "Report Pickup Issue" as UC_Report
+}
+
+recipient --> UC_Pickup
+recipient --> UC_Track
+
+UC_Track ..> UC_Auth : <<include>>
+
+UC_Report ..> UC_Pickup : <<extend>>\n(if door jammed or empty locker)
+
+UC_Pickup --> hardware
+UC_Notif --> notif
+UC_Notif --> recipient
+@enduml
