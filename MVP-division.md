@@ -5,7 +5,7 @@ Objective : guarantee a unified user experience across all interfaces while keep
 | Member | Primary Role & Module | Deliverables |
 | :--- | :--- | :--- |
 | **Vanathy** | **Frontend & UI Coherence Lead** (Presentation Layer) | • Shared UI shell, navigation, styling, and HTTP/JWT client wrapper<br>• `LoginUI`, `CourierDashboard`, `AdminDashboard`, and `LockerTerminalUI` views connected to the backend REST API |
-| **Member 2** | **Database, Auth & RBAC Service** | • PostgreSQL schema, migrations, and seed scripts (`Users`, `Lockers`, `Compartments`, `Parcels`)<br>• `AuthController`, `AuthService`, `UserRepository`, JWT login & RBAC middleware (**FR_05**, **NFR_01**) |
+| **Christos** | **Database, Auth & RBAC Service** | • PostgreSQL schema, migrations, and seed scripts (`Users`, `Lockers`, `Compartments`, `Parcels`)<br>• `AuthController`, `AuthService`, `UserRepository`, JWT login & RBAC middleware (**FR_05**, **NFR_01**) |
 | **Member 3** | **Parcel Registration & Assignment Module** (UC1 & UC2) | • `RegistrationController`, `RegistrationService` (**FR_02**, **FR_03**)<br>• `AssignmentController`, `AssignmentService` (**FR_04**, **NFR_04**)<br>• `ParcelRepository` |
 | **Member 4** | **Locker Deposit & Event Notification Service** (UC3) | • `DepositController`, `DepositService` (`ASSIGNED` -> `READY_FOR_PICKUP`, **FR_06**)<br>• Notification Service / Gateway (`ParcelDeposited` event handler -> SMS/Email dispatch **FR_07**) |
 | **Member 5** | **Guest Collection & Terminal Security Service** (UC4) | • `PickupController`, `PickupService` (**FR_01**, **FR_08**, **NFR_02**, **NFR_03**) |
