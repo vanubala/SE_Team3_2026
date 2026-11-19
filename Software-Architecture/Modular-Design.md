@@ -10,6 +10,8 @@ The courier arrives at their dashboard upon successful authentication. The dashb
 From the dashboard, the courier opens the **Parcel Registration Form** to input parcel details into the system:
 - **Barcode / External ID** — from the barcode or the external service that is sending the parcel; this is shared with the user for tracking purposes
 - **Size of Package** — `SMALL`, `MEDIUM`, `LARGE`.
+- **Preferred Destination Locker (`preferredLockerId`)** — the locker station selected by the recipient at checkout.
+- **Recipient Contact** — email or phone number for pickup code dispatch upon deposit.
 - **Expected Delivery Date & Time**
 - **Any extra notes** — ex : Optional instructions (e.g., "Fragile", "Handle with care").
 
@@ -25,11 +27,12 @@ The courier is also informed that the parcel has been successfully or unsuccessf
 #### 2. Service Layer (`RegistrationService`)
 Enforces validation, data manipulation and domain constraints rules : 
 1. Sanitization
-2. Format and Constrains Validation : required fields, IDs format, dates 
+2. Format and Constrains Validation : required fields, valid IDs and format, dates 
 3. Check for duplicates : using tracking IDs
 4. Create Parcel Entity:
    - Generates **parcel ID**, a secure, unique identifier within the system (for assignment, delivery at the locker etc.) from a hash of the barcode / external ID
    - Sets the barcode / internal ID as the **tracking number**
+   - Stores the recipient's `preferredLockerId` and contact details.
    - Initializes the **status** of the parcel to `REGISTERED`
    - Sets the parcel's pickup **deadline** using the esstimated delivery date  
    - Records the time and date
@@ -49,14 +52,15 @@ Enforces validation, data manipulation and domain constraints rules :
 **Precondition:** Courier is logged in (`JWT`), parcel status is `REGISTERED`, and target locker station has available compartments.
 
 ### Frontend (`CourierDashboard`)
-From the dashboard's Packages Awaiting Assignment list, the courier selects a registered parcel and chooses a destination locker station (or the one already registered):
-- The UI displays the station's available compartments grouped by size (`SMALL`, `MEDIUM`, `LARGE`) and highlights the **system's recommended compartment** (smallest available fit).
+From the dashboard's Packages Awaiting Assignment list, the courier selects a registered parcel :
+- The UI automatically pre-selects the recipient's **preferred destination locker (`preferredLockerId`)**, displays its available compartments grouped by size (`SMALL`, `MEDIUM`, `LARGE`), and highlights the **system's recommended compartment** (smallest available fit).
+- If the preferred locker station is full or under maintenance, the courier can select an alternative nearby locker station from a dropdown fallback.
 - The courier confirms the suggested compartment (or selects another fitting one) and receives immediate feedback if the assignment succeeded or if the compartment was just taken.
 
 ### Backend (on POST / PATCH)
 
 #### 1. Controller Layer (`AssignmentController`)
-- Accepts the incoming HTTP request containing `parcelId`, `lockerId`, and `compartmentId` (or auto-assign flag).
+- Accepts the incoming HTTP request containing `parcelId`, `lockerId` (by default `preferredLockerId`), and `compartmentId` (or auto-assign flag).
 - Verifies the courier's JWT and `COURIER` role, then delegates to `AssignmentService`.
 
 #### 2. Service Layer (`AssignmentService`)
@@ -64,13 +68,12 @@ Enforces concurrency, matching, and reservation rules:
 1. Validates that the parcel exists and has status `REGISTERED`.
 2. Checks real-time availability of the requested compartment (or finds the smallest available compartment matching the parcel's size).
 3. **Concurrency Lock:** Atomically reserves the compartment so no other courier can claim it simultaneously.
-4. Generates a unique, single-use **pickup PIN / QR code** (stored securely in the database, **not yet sent** to the recipient).
-5. Updates the parcel's `status` to `ASSIGNED` and links `compartmentId`.
-6. Returns `SUCCESS` with the assigned compartment number, or an error if the locker/size is unavailable.
+4. Updates the parcel's `status` to `ASSIGNED` and links `compartmentId`.
+5. Returns `SUCCESS` with the assigned compartment number, or an error if the locker/size is unavailable.
 
 #### 3. Data Access Layer (`ParcelRepository` & `LockerRepository`)
-1. `LockerRepository` updates the compartment status from `AVAILABLE` to `RESERVED` / `OCCUPIED` within a database transaction.
-2. `ParcelRepository` updates the parcel's `status`, `compartmentId`, and hashed `pickupCode`.
+1. `LockerRepository` updates the compartment status from `AVAILABLE` to `RESERVED` within a database transaction.
+2. `ParcelRepository` updates the parcel's `status` to `ASSIGNED` and saves `compartmentId`.
 - **On Success:** Returns the updated parcel and compartment records to the service layer.
 - **On Error:** Rolls back the transaction and returns a conflict/storage error to the service layer.
 

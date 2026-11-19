@@ -1,0 +1,75 @@
+@startuml Assign Use Case Diagram
+title UC2: Assign a Compartment (Courier)
+
+actor "Courier" as courier
+boundary "CourierDashboard" as ui <<boundary>>
+control "AssignmentController" as ctrl <<control>>
+entity "AssignmentService" as service <<service>>
+database "ParcelRepository" as parcelRepo <<repo>>
+database "LockerRepository" as lockerRepo <<repo>>
+
+
+courier -> ui: selectParcelAndDestinationLocker(parcelId, lockerId)
+activate ui
+
+ui -> ctrl: GET /api/lockers/{lockerId}/compartments?size={sizeCategory}
+activate ctrl
+
+ctrl -> service: getAvailableAndRecommendedCompartment(parcelId, lockerId)
+activate service
+
+service -> parcelRepo: findById(parcelId)
+activate parcelRepo
+parcelRepo --> service: parcel (status = REGISTERED, sizeCategory)
+deactivate parcelRepo
+
+service -> lockerRepo: findAvailableCompartments(lockerId, parcel.sizeCategory)
+activate lockerRepo
+lockerRepo --> service: availableCompartmentsList
+deactivate lockerRepo
+
+alt compartmentsAvailable == true
+    service -> service: selectSmallestFittingCompartment(availableCompartmentsList)
+    service --> ctrl: compartmentOptionsAndRecommendation(availableCompartmentsList, recommendedCompId)
+    ctrl --> ui: HTTP 200 OK (options, recommendedCompId)
+    ui --> courier: displayAvailableCompartmentsAndHighlightRecommendation()
+
+    courier -> ui: confirmCompartmentSelection(compartmentId)
+    ui -> ctrl: POST /api/parcels/{parcelId}/assign (JWT, lockerId, compartmentId)
+
+    ctrl -> service: assignCompartment(parcelId, lockerId, compartmentId)
+
+    service -> lockerRepo: reserveCompartmentAtomic(compartmentId)
+    activate lockerRepo
+
+    alt Compartment Still Available (Lock Acquired)
+        lockerRepo --> service: compartmentReserved (status = "RESERVED")
+        deactivate lockerRepo
+
+        service -> parcelRepo: updateAssignment(parcelId, compartmentId, status = "ASSIGNED")
+        activate parcelRepo
+        parcelRepo --> service: parcelUpdated
+        deactivate parcelRepo
+
+        service --> ctrl: assignmentSuccess(parcelId, compartmentId)
+        ctrl --> ui: HTTP 200 OK ("Compartment Assigned")
+        ui --> courier: displayAssignmentConfirmation(compartmentId)
+
+    else Concurrency Conflict (Compartment Just Taken)
+        lockerRepo --> service: throw ConcurrencyConflictException
+        deactivate lockerRepo
+        service --> ctrl: assignmentConflict("Compartment no longer available")
+        ctrl --> ui: HTTP 409 Conflict
+        ui --> courier: displayConflictErrorAndRefreshOptions()
+    end
+
+else compartmentsAvailable == false
+    service --> ctrl: noCompartmentAvailable("Locker full or size unavailable")
+    ctrl --> ui: HTTP 404 / 409 ("No suitable compartment available")
+    ui --> courier: displayErrorAndSuggestOtherLocker()
+end
+
+deactivate service
+deactivate ctrl
+deactivate ui
+@enduml
