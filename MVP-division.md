@@ -18,18 +18,7 @@ Objective : guarantee a unified user experience across all interfaces while keep
 
 ### Technology choice : 
 
-Option 1 : Full stack Typescript :
-- Backend & Notification server : Node.js + Express in TS : 
-    * Non-blocking I/O handles concurrent terminal polling and event-driven webhook/SMS triggers naturally. 
-    * Sharing TypeScript interfaces (Parcel, Compartment, UserRole) between the frontend, core server, and notification worker eliminates API contract mismatches.
-    * PostgreSQL Access: Prisma or Drizzle ORM (provides clean repository abstractions, parameterized queries against SQL injection, version-controlled migrations, and straightforward SELECT ... FOR UPDATE transactions for compartment locking).
-- Frontend : React + TS (with Vite) : 
-    * Component-based UI makes it easy to reuse layout shells, status badges, and JWT Axios/Fetch interceptors across the Courier, Admin, and Locker Terminal views.
-- Database : PostgreSQL for relational schemas, foreign keys, indexes and atomic concurrency transactions
-- Tests : Jest or Vitest to unit-test Service Layer rules
-
-
-Option 2 : Python Backend + React TS Frontend :
+Python Backend + React TS Frontend :
 - Backend & Notification server : Python 3.12+ and FastAPI : 
     * FastAPI natively enforces JSON request/response validation via Pydantic schemas (Controller/Service validation rules), generates automatic interactive Swagger/OpenAPI docs at /docs (making backend / frontend integration seemless), and supports async background tasks for your Notification Gateway.
     * PostgreSQL Access: SQLAlchemy 2.0 (with Alembic for schema migrations and row-level locking).
