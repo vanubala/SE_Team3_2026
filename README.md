@@ -1,5 +1,5 @@
 # 📦 Smart Parcel Locker System
-> Software Engineering 1 -- Team 3
+> Software Engineering 1 - Team 3
 
 ## Overview
 The **Smart Parcel Locker System** is a software and hardware management platform designed to streamline last-mile parcel delivery and collection through shared automated locker stations. It eliminates failed home deliveries, optimizes compartment utilization, and enables contact-free package retrieval.
@@ -19,8 +19,8 @@ The system serves three user roles :
 | WAICMAN GONCALVES Andres | andresgit763 | Register and Assign Module |
 | Christos NASOPOULOS | chris4nas | Authentication & Database |
 | Vasileios PANDIS | vasilispandis | Deposit Module and Notification Gateway |
-| Raed CHAUDRY | RJawad1223 |  |
-| Serhii ILLARIONOV | woodstockdelirium |  |
+| Raed CHAUDRY | RJawad1223 | Admin Monitor Module |
+| Serhii ILLARIONOV | woodstockdelirium | Pickup Module |
 
 ## Planning
 
