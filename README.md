@@ -16,11 +16,11 @@ The system serves three user roles :
 | Name | GitHub username | Responsible for |
 | :--- | :--- | :--- |
 | Vanathy BALACHANDRAN | vanubala | Frontend |
-| WAICMAN GONCALVES Andres | andresgit763 | Backend |
-| Christos NASOPOULOS | chris4nas | Authentication |
-| Vasileios PANDIS | vasilispandis | Database |
-| Raed CHAUDRY | RJawad1223 | Interactive features |
-| Serhii ILLARIONOV | woodstockdelirium | Interactive features |
+| WAICMAN GONCALVES Andres | andresgit763 | Register and Assign Module |
+| Christos NASOPOULOS | chris4nas | Authentication & Database |
+| Vasileios PANDIS | vasilispandis | Deposit Module and Notification Gateway |
+| Raed CHAUDRY | RJawad1223 |  |
+| Serhii ILLARIONOV | woodstockdelirium |  |
 
 ## Planning
 
