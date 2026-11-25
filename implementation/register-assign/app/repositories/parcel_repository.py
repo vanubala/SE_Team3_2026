@@ -1,0 +1,50 @@
+"""Saving and loading parcels."""
+from uuid import UUID
+
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from ..errors import DuplicateTrackingNumber, StorageError
+from ..models import Parcel, ParcelStatus
+
+
+class ParcelRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def exists_by_tracking_number(self, tracking_number: str) -> bool:
+        query = select(Parcel.parcel_id).where(Parcel.tracking_number == tracking_number)
+        return self.session.scalar(query) is not None
+
+    def save(self, parcel: Parcel) -> None:
+        self.session.add(parcel)
+        try:
+            self.session.flush()
+        except IntegrityError as exc:
+            # After a failed INSERT, PostgreSQL rejects further queries until the transaction is rolled back.
+            self.session.rollback()
+            if self.exists_by_tracking_number(parcel.tracking_number):
+                raise DuplicateTrackingNumber("A parcel with this tracking number is already registered") from exc
+            raise StorageError("Failed to save parcel") from exc
+        except SQLAlchemyError as exc:
+            self.session.rollback()
+            raise StorageError("Failed to save parcel") from exc
+
+    def find_by_id(self, parcel_id: UUID) -> Parcel | None:
+        return self.session.get(Parcel, parcel_id)
+
+    def find_by_courier(self, courier_id: UUID, status: str | None = None) -> list[Parcel]:
+        query = select(Parcel).where(Parcel.registered_by_courier_id == courier_id)
+        if status is not None:
+            query = query.where(Parcel.status == status)
+        return list(self.session.scalars(query.order_by(Parcel.registered_at, Parcel.tracking_number)))
+
+    def update_assignment(self, parcel_id: UUID, compartment_id: UUID) -> bool:
+        # Only updates the parcel if it is still REGISTERED.
+        result = self.session.execute(
+            update(Parcel)
+            .where(Parcel.parcel_id == parcel_id, Parcel.status == ParcelStatus.REGISTERED)
+            .values(status=ParcelStatus.ASSIGNED, compartment_id=compartment_id)
+        )
+        return result.rowcount == 1
