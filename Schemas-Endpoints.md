@@ -346,6 +346,24 @@ Toggles a compartment between `AVAILABLE` and `MAINTENANCE` (blocking or restori
 ```
 * **Errors:** `409 Conflict` (cannot set an `OCCUPIED` compartment directly to `AVAILABLE` without parcel clearance)
 
+#### `PATCH /api/admin/lockers/{lockerId}`
+Changes the operational status of a whole locker station (`FR_10`). New assignments are only possible while it is `ONLINE`; the statuses of its compartments are not modified.
+* **Access:** `ADMIN` (`Bearer JWT`)
+* **Request Body:** (`operationalStatus`: `ONLINE`, `OFFLINE` or `MAINTENANCE`)
+```json
+{
+  "operationalStatus": "OFFLINE"
+}
+```
+* **Response (`200 OK`):**
+```json
+{
+  "lockerId": "loc-belval-01",
+  "operationalStatus": "OFFLINE"
+}
+```
+* **Errors:** `400 Bad Request` (invalid status), `404 Not Found` (unknown locker)
+
 ---
 
 ## 3. Standard HTTP Error Envelope

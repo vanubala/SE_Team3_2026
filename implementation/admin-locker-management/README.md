@@ -24,7 +24,8 @@ Additions to the contract in `Schemas-Endpoints.md`, to be agreed by the team:
 
 - `occupancy` also has `occupancyRate` (reserved + occupied, in % of total) and `availableBySize`, required by `Modular-Design.md`.
 - PATCH responses have an extra `warning` text when an active parcel is affected.
-- The station PATCH is named in `Software-Architecture.md` and needed by FR_10, but `Schemas-Endpoints.md` does not define its payload. FR_10's "Unavailable" is mapped to `OFFLINE` for stations.
+
+FR_10's "Unavailable" is mapped to `OFFLINE` for stations.
 
 ## Rules
 
@@ -40,7 +41,7 @@ app.include_router(AdminLockerController(require_admin, get_session).router)
 register_error_handlers(app)
 ```
 
-- **Database/Auth:** replace `models.py` with the shared models and `auth.py` with the shared RBAC dependency. The role is `ADMIN`, as in the contract (the login prototype uses `ADMINISTRATOR`).
+- **Database/Auth:** replace `models.py` with the shared models and `auth.py` with the shared RBAC dependency. The role is `ADMIN`, as in the contract.
 - **Assignment:** call `LockerRepository.reserve_compartment` and link the parcel in the same transaction. It refuses stations that are not `ONLINE`.
 - **Deposit / Pickup:** use `occupy_compartment` / `release_compartment`. Both return `False` if the compartment is in `MAINTENANCE`. A pickup may still complete, but the compartment must stay in `MAINTENANCE`. The team still has to decide whether a deposit into a compartment blocked after assignment is allowed.
 - Repository methods never commit; the calling service does.
