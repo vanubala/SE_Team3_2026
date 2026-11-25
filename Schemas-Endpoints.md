@@ -163,6 +163,7 @@ Retrieves the courier's registered parcels awaiting compartment assignment.
   }
 ]
 ```
+* **Errors:** `400 Bad Request` (unknown `status`)
 
 ---
 
@@ -182,6 +183,7 @@ Lists available compartments at a locker station and identifies the smallest fit
   ]
 }
 ```
+* **Errors:** `400 Bad Request` (unknown `size`), `404 Not Found` (locker not found), `409 Conflict` (locker not `ONLINE`, or no available compartment of that size or larger)
 
 #### `POST /api/parcels/{parcelId}/assign`
 Atomically reserves a compartment (`RESERVED`) and updates the parcel to `ASSIGNED`.
@@ -203,7 +205,7 @@ Atomically reserves a compartment (`RESERVED`) and updates the parcel to `ASSIGN
   "compartmentNumber": 4
 }
 ```
-* **Errors:** `404 Not Found` (parcel/locker not found), `409 Conflict` (compartment already reserved by another courier)
+* **Errors:** `400 Bad Request` (malformed body or ID), `404 Not Found` (parcel, locker or compartment not found), `409 Conflict` (parcel not `REGISTERED`, locker not `ONLINE`, compartment too small or already reserved by another courier)
 
 ---
 
