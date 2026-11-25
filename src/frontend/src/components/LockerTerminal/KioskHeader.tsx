@@ -9,13 +9,13 @@ import {
   type Theme,
 } from "@mui/material";
 
-export type KioskLanguage = "FR" | "EN" | "DE" | "LB";
+export type KioskLanguage = "FR" | "EN" | "DE" | "LU";
 
 interface KioskHeaderProps {
   stationName: string;
 }
 
-const LANGUAGES: KioskLanguage[] = ["FR", "EN", "DE", "LB"];
+const LANGUAGES: KioskLanguage[] = ["FR", "EN", "DE", "LU"];
 
 export function KioskHeader({ stationName }: KioskHeaderProps) {
   const [lang, setLang] = useState<KioskLanguage>("EN");
