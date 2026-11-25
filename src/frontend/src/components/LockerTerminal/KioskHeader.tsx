@@ -1,73 +1,100 @@
+import { useState } from "react";
 import {
   Box,
-  MenuItem,
-  Select,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
   type SxProps,
   type Theme,
 } from "@mui/material";
 
-export interface LockerStationOption {
-  id: string;
-  name: string;
-}
+export type KioskLanguage = "FR" | "EN" | "DE" | "LB";
 
 interface KioskHeaderProps {
-  stations: LockerStationOption[];
-  selectedLockerId: string;
-  disabled: boolean;
-  onSelectLocker: (lockerId: string) => void;
+  stationName: string;
 }
 
-export function KioskHeader({
-  stations,
-  selectedLockerId,
-  disabled,
-  onSelectLocker,
-}: KioskHeaderProps) {
+const LANGUAGES: KioskLanguage[] = ["FR", "EN", "DE", "LB"];
+
+export function KioskHeader({ stationName }: KioskHeaderProps) {
+  const [lang, setLang] = useState<KioskLanguage>("EN");
+
   return (
     <Box sx={styles.headerBar}>
-      <Typography variant="subtitle1" sx={styles.title}>
-        KIOSK TERMINAL
-      </Typography>
+      <Box>
+        <Typography variant="overline" sx={styles.brandLabel}>
+          SMART LOCKER TERMINAL
+        </Typography>
+        <Typography variant="subtitle1" sx={styles.stationName}>
+          {stationName}
+        </Typography>
+      </Box>
 
-      <Select
-        size="small"
-        value={selectedLockerId}
-        disabled={disabled}
-        onChange={(e) => onSelectLocker(e.target.value)}
-        sx={styles.stationSelect}
-      >
-        {stations.map((station) => (
-          <MenuItem key={station.id} value={station.id}>
-            {station.name}
-          </MenuItem>
-        ))}
-      </Select>
+      <Stack direction="row" spacing={1.5} sx={styles.rightControls}>
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={lang}
+          onChange={(_, nextLang: KioskLanguage | null) => {
+            if (nextLang) setLang(nextLang);
+          }}
+          aria-label="Language selector"
+          sx={styles.langGroup}
+        >
+          {LANGUAGES.map((code) => (
+            <ToggleButton key={code} value={code} sx={styles.langButton}>
+              {code}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Stack>
     </Box>
   );
 }
 
 const styles: Record<string, SxProps<Theme>> = {
   headerBar: {
-    bgcolor: "#334155",
-    color: "#ffffff",
-    px: 3,
-    py: 1.5,
+    bgcolor: "#FFFFFF",
+    px: { xs: 2.5, sm: 4 },
+    py: 2,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottom: "1px solid",
+    borderColor: "divider",
   },
-  title: {
+  brandLabel: {
+    display: "block",
+    lineHeight: 1.2,
+    fontWeight: 800,
+    color: "primary.main",
+    letterSpacing: 1,
+  },
+  stationName: {
     fontWeight: 700,
-    letterSpacing: 0.5,
+    color: "text.primary",
   },
-  stationSelect: {
-    bgcolor: "rgba(255,255,255,0.12)",
-    color: "#fff",
-    ".MuiOutlinedInput-notchedOutline": {
-      borderColor: "rgba(255,255,255,0.3)",
+  rightControls: {
+    alignItems: "center",
+  },
+  langGroup: {
+    bgcolor: "#F8FAFC",
+    borderRadius: 2,
+  },
+  langButton: {
+    px: 1.25,
+    py: 0.4,
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    color: "text.secondary",
+    borderColor: "#E2E8F0",
+    "&.Mui-selected": {
+      bgcolor: "primary.main",
+      color: "#FFFFFF",
+      "&:hover": {
+        bgcolor: "primary.dark",
+      },
     },
-    ".MuiSvgIcon-root": { color: "#fff" },
   },
 };

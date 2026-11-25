@@ -40,13 +40,13 @@ export function CodeEntryStep({
     {
       number: "1",
       label: isPickup ? "Enter 6-Digit PIN" : "Enter Parcel ID",
-      color: "#2563eb",
+      color: "primary.main",
     },
-    { number: "2", label: "Compartment Opens", color: "#2563eb" },
+    { number: "2", label: "Compartment Opens", color: "primary.main" },
     {
       number: "3",
       label: isPickup ? "Collect & Close Door" : "Place & Close Door",
-      color: "#2e7d32",
+      color: "primary.main",
     },
   ];
 
@@ -110,7 +110,7 @@ export function CodeEntryStep({
           fullWidth
           variant="contained"
           size="large"
-          color={isPickup ? "success" : "primary"}
+          color={isPickup ? "secondary" : "primary"}
           disabled={isDisabled}
           sx={styles.submitButton}
         >
@@ -143,12 +143,13 @@ const styles: Record<string, SxProps<Theme>> = {
   stepCard: {
     flex: 1,
     p: 2,
-    textAlign: "center",
+    textAlign: 'center',
     borderRadius: 2,
-    bgcolor: "#f8fafc",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+    bgcolor: '#E3F2FD',
+    borderColor: '#BFDBFE',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     gap: 1,
   },
   stepBadge: {

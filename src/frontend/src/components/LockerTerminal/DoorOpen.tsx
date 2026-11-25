@@ -100,7 +100,7 @@ const styles: Record<string, SxProps<Theme>> = {
     border: "1px solid #e2e8f0",
   },
   lockerBanner: {
-    bgcolor: "#ea580c",
+    bgcolor: "primary.main",
     color: "#fff",
     py: 1,
   },
@@ -110,7 +110,7 @@ const styles: Record<string, SxProps<Theme>> = {
   },
   lockerNumberBox: {
     py: 4,
-    bgcolor: "#f8fafc",
+    bgcolor: "#E3F2FD",
   },
   lockerNumber: {
     fontWeight: 800,
@@ -131,5 +131,6 @@ const styles: Record<string, SxProps<Theme>> = {
     fontWeight: 700,
     borderRadius: 2,
     textTransform: "none",
+    color: "primary",
   },
 };
