@@ -13,7 +13,11 @@ import {
   type SxProps,
   type Theme,
 } from "@mui/material";
-import { adminApi, type AdminLockerOverview } from "../api/adminApi";
+import {
+  adminApi,
+  type AdminLockerOverview,
+  type StationOccupancy,
+} from "../api/adminApi";
 import { AdminKpiRow } from "../components/Admin/AdminKpi";
 import { CompartmentStatusDialog } from "../components/Admin/CompartmentStatus";
 import { LockerBankGrid } from "../components/LockerGrid";
@@ -24,9 +28,135 @@ import {
   type LockerOperationalStatus,
 } from "../types/domain";
 
+// Temporary preview station used only when the backend server is unreachable — remove at integration
+const PREVIEW_STATION: AdminLockerOverview = {
+  lockerId: "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
+  name: "Maison du Savoir - Belval Campus",
+  address: "2 Avenue de l'Université, 4361 Esch-sur-Alzette",
+  openingHours: "08:00 – 22:00",
+  operationalStatus: "ONLINE",
+  occupancy: {
+    total: 12,
+    available: 7,
+    reserved: 2,
+    occupied: 2,
+    maintenance: 1,
+    occupancyRate: 33.3,
+    availableBySize: { SMALL: 3, MEDIUM: 2, LARGE: 2 },
+  },
+  compartments: [
+    {
+      compartmentId: "c-01",
+      compartmentNumber: 1,
+      sizeCategory: "SMALL",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-02",
+      compartmentNumber: 2,
+      sizeCategory: "SMALL",
+      status: "OCCUPIED",
+    },
+    {
+      compartmentId: "c-03",
+      compartmentNumber: 3,
+      sizeCategory: "SMALL",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-04",
+      compartmentNumber: 4,
+      sizeCategory: "SMALL",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-05",
+      compartmentNumber: 5,
+      sizeCategory: "MEDIUM",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-06",
+      compartmentNumber: 6,
+      sizeCategory: "MEDIUM",
+      status: "RESERVED",
+    },
+    {
+      compartmentId: "c-07",
+      compartmentNumber: 7,
+      sizeCategory: "MEDIUM",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-08",
+      compartmentNumber: 8,
+      sizeCategory: "MEDIUM",
+      status: "OCCUPIED",
+    },
+    {
+      compartmentId: "c-09",
+      compartmentNumber: 9,
+      sizeCategory: "LARGE",
+      status: "AVAILABLE",
+    },
+    {
+      compartmentId: "c-10",
+      compartmentNumber: 10,
+      sizeCategory: "LARGE",
+      status: "MAINTENANCE",
+    },
+    {
+      compartmentId: "c-11",
+      compartmentNumber: 11,
+      sizeCategory: "LARGE",
+      status: "RESERVED",
+    },
+    {
+      compartmentId: "c-12",
+      compartmentNumber: 12,
+      sizeCategory: "LARGE",
+      status: "AVAILABLE",
+    },
+  ],
+};
+
+function computePreviewOccupancy(
+  compartments: Compartment[]
+): StationOccupancy {
+  const total = compartments.length;
+  const available = compartments.filter((c) => c.status === "AVAILABLE").length;
+  const reserved = compartments.filter((c) => c.status === "RESERVED").length;
+  const occupied = compartments.filter((c) => c.status === "OCCUPIED").length;
+  const maintenance = compartments.filter(
+    (c) => c.status === "MAINTENANCE"
+  ).length;
+  const inUse = reserved + occupied;
+
+  return {
+    total,
+    available,
+    reserved,
+    occupied,
+    maintenance,
+    occupancyRate: total ? Math.round((1000 * inUse) / total) / 10 : 0,
+    availableBySize: {
+      SMALL: compartments.filter(
+        (c) => c.status === "AVAILABLE" && c.sizeCategory === "SMALL"
+      ).length,
+      MEDIUM: compartments.filter(
+        (c) => c.status === "AVAILABLE" && c.sizeCategory === "MEDIUM"
+      ).length,
+      LARGE: compartments.filter(
+        (c) => c.status === "AVAILABLE" && c.sizeCategory === "LARGE"
+      ).length,
+    },
+  };
+}
+
 export function AdminDashboard() {
   const [stations, setStations] = useState<AdminLockerOverview[]>([]);
   const [selectedLockerId, setSelectedLockerId] = useState<string>("");
+  const [isOfflinePreview, setIsOfflinePreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stationUpdating, setStationUpdating] = useState(false);
 
@@ -35,7 +165,6 @@ export function AdminDashboard() {
     message: string;
   } | null>(null);
 
-  // Selected compartment modal state
   const [activeCompartment, setActiveCompartment] =
     useState<Compartment | null>(null);
   const [compSubmitting, setCompSubmitting] = useState(false);
@@ -45,6 +174,7 @@ export function AdminDashboard() {
     setLoading(true);
     try {
       const list = await adminApi.getLockersOverview();
+      setIsOfflinePreview(false);
       setStations(list);
       if (list.length > 0) {
         setSelectedLockerId((prev) =>
@@ -52,13 +182,20 @@ export function AdminDashboard() {
         );
       }
     } catch (err) {
-      setFeedback({
-        severity: "error",
-        message:
-          err instanceof ApiError
-            ? err.message
-            : "Unable to load locker stations.",
-      });
+      // Fallback to preview station when backend server is unreachable
+      if (err instanceof ApiError && err.code === "NETWORK") {
+        setIsOfflinePreview(true);
+        setStations((prev) => (prev.length > 0 ? prev : [PREVIEW_STATION]));
+        setSelectedLockerId((prev) => prev || PREVIEW_STATION.lockerId);
+      } else {
+        setFeedback({
+          severity: "error",
+          message:
+            err instanceof ApiError
+              ? err.message
+              : "Unable to load locker stations.",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -79,6 +216,52 @@ export function AdminDashboard() {
   ) => {
     setCompSubmitting(true);
     setCompError(null);
+
+    if (isOfflinePreview && currentStation) {
+      // Interactive local state update while previewing offline
+      const target = currentStation.compartments.find(
+        (c) => c.compartmentId === compartmentId
+      );
+      const hasParcel =
+        target?.status === "RESERVED" || target?.status === "OCCUPIED";
+
+      if (nextStatus === "AVAILABLE" && hasParcel) {
+        setCompError(
+          `Compartment #${target?.compartmentNumber} still has an active parcel. Resolve it before making it AVAILABLE.`
+        );
+        setCompSubmitting(false);
+        return;
+      }
+
+      const updatedComps = currentStation.compartments.map((c) =>
+        c.compartmentId === compartmentId ? { ...c, status: nextStatus } : c
+      );
+      setStations((prev) =>
+        prev.map((st) =>
+          st.lockerId === currentStation.lockerId
+            ? {
+                ...st,
+                compartments: updatedComps,
+                occupancy: computePreviewOccupancy(updatedComps),
+              }
+            : st
+        )
+      );
+      setActiveCompartment(null);
+      setCompSubmitting(false);
+      setFeedback({
+        severity:
+          nextStatus === "MAINTENANCE" && hasParcel ? "warning" : "success",
+        message:
+          nextStatus === "MAINTENANCE" && hasParcel
+            ? "This compartment still has an active parcel. No new parcel can be assigned to it."
+            : `Compartment #${
+                target?.compartmentNumber ?? ""
+              } updated to ${nextStatus}.`,
+      });
+      return;
+    }
+
     try {
       const res = await adminApi.updateCompartmentStatus(
         compartmentId,
@@ -115,6 +298,22 @@ export function AdminDashboard() {
     ) {
       return;
     }
+
+    if (isOfflinePreview) {
+      setStations((prev) =>
+        prev.map((st) =>
+          st.lockerId === currentStation.lockerId
+            ? { ...st, operationalStatus: nextStatus }
+            : st
+        )
+      );
+      setFeedback({
+        severity: nextStatus === "ONLINE" ? "success" : "warning",
+        message: `Station "${currentStation.name}" is now ${nextStatus}.`,
+      });
+      return;
+    }
+
     setStationUpdating(true);
     try {
       const res = await adminApi.updateLockerStatus(
@@ -143,7 +342,6 @@ export function AdminDashboard() {
 
   return (
     <Box>
-      {/* Top Header + Location Selector (Inspired by StrongPoint Dashboard) */}
       <Stack direction={{ xs: "column", md: "row" }} sx={styles.headerRow}>
         <Box>
           <Typography variant="h4" sx={styles.title}>
@@ -212,7 +410,6 @@ export function AdminDashboard() {
             stationCount={stations.length}
           />
 
-          {/* Main Station Card: Station Metadata + Interactive Physical Locker Bank */}
           <Card elevation={0} sx={styles.stationCard}>
             <CardContent sx={styles.stationCardBody}>
               <Stack
@@ -236,7 +433,6 @@ export function AdminDashboard() {
                   </Typography>
                 </Box>
 
-                {/* Whole-Station Operational Status Switcher (FR_10) */}
                 <TextField
                   select
                   size="small"
