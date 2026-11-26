@@ -2,6 +2,7 @@ export type TerminalMode = "PICKUP" | "DEPOSIT";
 
 export interface DepositUnlockResponse {
   parcelId: string;
+  compartmentId: string;
   compartmentNumber: number;
   doorCommand: "UNLOCK";
 }

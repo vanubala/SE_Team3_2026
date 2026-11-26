@@ -7,6 +7,9 @@ import {
 } from "../types/terminal";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// Credential of this physical terminal, bound to its locker station
+// (backend: python -m app.security.terminal_auth <locker_id>).
+const TERMINAL_TOKEN = import.meta.env.VITE_TERMINAL_TOKEN as string | undefined;
 
 async function postJson<T>(
   path: string,
@@ -16,7 +19,10 @@ async function postJson<T>(
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(TERMINAL_TOKEN ? { Authorization: `Bearer ${TERMINAL_TOKEN}` } : {}),
+      },
       body: JSON.stringify(body),
     });
   } catch {
@@ -57,10 +63,10 @@ export const terminalApi = {
       parcelId,
     }),
 
-  confirmDeposit: (parcelId: string, compartmentNumber: number) =>
+  confirmDeposit: (parcelId: string, compartmentId: string) =>
     postJson<DepositConfirmResponse>("/terminal/deposit/confirm", {
       parcelId,
-      compartmentNumber,
+      compartmentId,
       doorClosed: true,
       parcelDetected: true,
     }),

@@ -51,10 +51,10 @@ export function TerminalDoorPage() {
           message: `Compartment #${state.compartmentNumber} closed. Parcel collected—thank you!`,
         });
       } else {
-        await terminalApi.confirmDeposit(
-          state.parcelId,
-          state.compartmentNumber
-        );
+        if (!state.compartmentId) {
+          throw new TerminalApiError("Deposit session missing. Please enter the Parcel ID again.", "CONFLICT");
+        }
+        await terminalApi.confirmDeposit(state.parcelId, state.compartmentId);
         setFeedback({
           severity: "success",
           message: `Compartment #${state.compartmentNumber} closed. Parcel deposited & recipient notified!`,

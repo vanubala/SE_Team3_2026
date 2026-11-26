@@ -51,6 +51,7 @@ export function TerminalCodePage() {
           state: {
             mode,
             parcelId: res.parcelId,
+            compartmentId: res.compartmentId,
             compartmentNumber: res.compartmentNumber,
           },
         });
