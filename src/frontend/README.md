@@ -8,7 +8,7 @@ React + TypeScript + Vite presentation layer for the **Smart Parcel Locker Syste
 * **Framework:** React 19 + TypeScript + Vite
 * **Routing:** `react-router-dom`
 * **UI & Styling:** Material UI (`@mui/material`, `@emotion/react`, `@emotion/styled`) with centralized theme tokens (`src/theme.ts`)
-* **Backend Integration:** REST JSON API over HTTPS (`VITE_API_URL`)
+* **Backend Integration:** REST JSON API over HTTPS (`VITE_API_URL`). The locker terminal views also need `VITE_LOCKER_ID` and that station's credential in `VITE_TERMINAL_TOKEN` (from `python -m app.security.terminal_auth <locker_id>` in the backend).
 
 ---
 
