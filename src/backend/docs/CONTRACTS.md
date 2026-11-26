@@ -3,6 +3,7 @@
 - **Authentication:** `POST /api/auth/login` verifies staff passwords with Argon2id and issues a signed JWT. Tokens default to 30 minutes. Use `require_courier`, `require_admin`, or `current_user` on staff routes. Guest pickup has its own flow.
 - **Database:** Alembic revision `0001_mvp_schema` creates `users`, `lockers`, `compartments`, `parcels`, and `pickup_codes` from the team SQL contract. Serialize UUIDs as strings and use timezone-aware timestamps. Feature services own transactions. `get_db` provides one session per request.
 - **Admin (PR #38):** Pass `require_admin` and `get_db` to `AdminLockerController`. Use the shared models in place of its temporary mappings. `Locker.compartments` is ordered by compartment number. The team agreed to the `ADMIN` role.
+- **Registration and assignment (UC1, UC2):** the courier routes `POST /api/parcels`, `GET /api/parcels`, `GET /api/lockers/{lockerId}/compartments` and `POST /api/parcels/{parcelId}/assign` are mounted in `create_app`. Set `PARCEL_ID_NAMESPACE` (a UUID) for the hashed parcel IDs. `LockerRepository.reserve_compartment(locker_id, compartment_id)` reserves a compartment in the caller's transaction. Details: `docs/registration-assignment.md`.
 - **Allocation:** The partial unique index rejects two `ASSIGNED` or `READY_FOR_PICKUP` parcels in the same compartment. Use a single transaction for reserving a compartment and updating the parcel. The feature service still needs to check whether the compartment is available.
 
 ## Integration decisions

@@ -1,4 +1,5 @@
 from functools import lru_cache
+from uuid import UUID
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     jwt_issuer: str = 'smart-locker-auth'
     jwt_audience: str = 'smart-locker-api'
     jwt_ttl_minutes: int = Field(default=30, ge=1, le=60)
+    parcel_id_namespace: UUID | None = None
     cors_origins: list[str] = ['http://localhost:5173', 'http://127.0.0.1:5173']
 
     @field_validator('jwt_secret')
