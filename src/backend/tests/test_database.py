@@ -15,6 +15,7 @@ EXPECTED={
  'compartments': 'compartment_id locker_id compartment_number size_category status version',
  'parcels': 'parcel_id tracking_number size_category status preferred_locker_id compartment_id registered_by_courier_id recipient_contact notes expected_delivery registered_at deposited_at pickup_deadline collected_at',
  'pickup_codes': 'code_id parcel_id code_hash failed_attempts locked_until issued_at expires_at used_at',
+ 'terminal_lockouts': 'locker_id failed_attempts last_failed_at locked_until',
 }
 
 @pytest.fixture
