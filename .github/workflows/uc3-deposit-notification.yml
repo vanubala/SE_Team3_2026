@@ -1,0 +1,37 @@
+name: UC3 deposit and notification tests
+
+on:
+  pull_request:
+    paths:
+      - "implementation/deposit-notification/**"
+      - "src/backend/migrations/versions/0002_unique_pickup_code_hash.py"
+      - ".github/workflows/uc3-deposit-notification.yml"
+  push:
+    paths:
+      - "implementation/deposit-notification/**"
+      - "src/backend/migrations/versions/0002_unique_pickup_code_hash.py"
+      - ".github/workflows/uc3-deposit-notification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  uc3-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install UC3 and shared-backend test dependencies
+        run: >-
+          python -m pip install
+          -r implementation/deposit-notification/requirements-dev.txt
+          -r src/backend/requirements-dev.txt
+      - name: Run UC3 tests
+        working-directory: implementation/deposit-notification
+        run: python -m pytest -q
+      - name: Validate shared Alembic migration chain
+        working-directory: src/backend
+        run: python -m alembic upgrade head --sql
