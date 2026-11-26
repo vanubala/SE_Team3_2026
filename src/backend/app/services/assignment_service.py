@@ -1,8 +1,9 @@
 """Compartment assignment (UC2, FR_04, NFR_04)."""
 from uuid import UUID
 
-from ..database import UnitOfWork
-from ..errors import (
+from app.db.models import Compartment, LockerStatus, Parcel, ParcelStatus, SizeCategory
+from app.repositories.unit_of_work import UnitOfWork
+from app.services.parcel_errors import (
     CompartmentNotFound,
     CompartmentTaken,
     CompartmentTooSmall,
@@ -12,8 +13,7 @@ from ..errors import (
     ParcelNotFound,
     ParcelNotRegistered,
 )
-from ..models import Compartment, LockerStatus, Parcel, ParcelStatus, SizeCategory
-from .sizes import SIZE_RANK, parse_size
+from app.services.sizes import SIZE_RANK, parse_size
 
 
 def fitting_sizes(parcel_size: SizeCategory) -> list[SizeCategory]:

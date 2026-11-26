@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from ..models import Compartment, CompartmentStatus, Locker, LockerStatus
+from app.db.models import Compartment, CompartmentStatus, Locker, LockerStatus
 
 
 class LockerRepository:

@@ -3,7 +3,9 @@ from uuid import UUID
 
 import pytest
 
-from app.errors import (
+from app.db.models import Compartment, Locker, Parcel
+from app.services.assignment_service import AssignmentService
+from app.services.parcel_errors import (
     CompartmentNotFound,
     CompartmentTaken,
     CompartmentTooSmall,
@@ -14,10 +16,8 @@ from app.errors import (
     ParcelNotFound,
     ParcelNotRegistered,
 )
-from app.models import Compartment, Locker, Parcel
-from app.services.assignment_service import AssignmentService
 from app.services.registration_service import ParcelForm, RegistrationService
-from tests.conftest import NAMESPACE, NOW, TOMORROW, add_locker, uid
+from register_assign.support import NAMESPACE, NOW, TOMORROW, add_locker, uid
 
 COURIER = uid("courier-1")
 

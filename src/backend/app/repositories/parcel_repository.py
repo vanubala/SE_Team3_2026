@@ -2,11 +2,11 @@
 from uuid import UUID
 
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ..errors import DuplicateTrackingNumber, StorageError
-from ..models import Parcel, ParcelStatus
+from app.db.models import Parcel, ParcelStatus
+from app.services.parcel_errors import DuplicateTrackingNumber
 
 
 class ParcelRepository:
@@ -18,6 +18,7 @@ class ParcelRepository:
         return self.session.scalar(query) is not None
 
     def save(self, parcel: Parcel) -> None:
+        """Adds the parcel to the session. Raises DuplicateTrackingNumber, or the database error."""
         self.session.add(parcel)
         try:
             self.session.flush()
@@ -26,10 +27,7 @@ class ParcelRepository:
             self.session.rollback()
             if self.exists_by_tracking_number(parcel.tracking_number):
                 raise DuplicateTrackingNumber("A parcel with this tracking number is already registered") from exc
-            raise StorageError("Failed to save parcel") from exc
-        except SQLAlchemyError as exc:
-            self.session.rollback()
-            raise StorageError("Failed to save parcel") from exc
+            raise
 
     def find_by_id(self, parcel_id: UUID) -> Parcel | None:
         return self.session.get(Parcel, parcel_id)

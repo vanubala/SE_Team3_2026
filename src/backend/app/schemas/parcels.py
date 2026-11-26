@@ -25,7 +25,7 @@ class RequestBody(BaseModel):
 
 class ResponseBody(BaseModel):
     # Filled from the database objects; sent with camelCase names.
-    model_config = ConfigDict(alias_generator=to_camel, validate_by_name=True, from_attributes=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, from_attributes=True)
 
 
 class RegisterParcelIn(RequestBody):

@@ -8,13 +8,13 @@ import pytest
 from sqlalchemy import select, text, update
 from sqlalchemy.orm import Session
 
-from app.database import UnitOfWork
-from app.errors import CompartmentTaken, DuplicateTrackingNumber, ParcelNotRegistered
-from app.models import Compartment, Locker, Parcel
+from app.db.models import Compartment, Locker, Parcel
 from app.repositories.locker_repository import LockerRepository
+from app.repositories.unit_of_work import UnitOfWork
 from app.services.assignment_service import AssignmentService
+from app.services.parcel_errors import CompartmentTaken, DuplicateTrackingNumber, ParcelNotRegistered
 from app.services.registration_service import ParcelForm, RegistrationService
-from tests.conftest import NAMESPACE, NOW, TOMORROW, uid
+from register_assign.support import NAMESPACE, NOW, TOMORROW, uid
 
 COURIER = uid("courier-1")
 

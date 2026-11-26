@@ -5,10 +5,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from ..database import UnitOfWork
-from ..errors import DuplicateTrackingNumber, InvalidParcelData
-from ..models import Parcel, ParcelStatus
-from .sizes import parse_size
+from app.db.models import Parcel, ParcelStatus
+from app.repositories.unit_of_work import UnitOfWork
+from app.services.parcel_errors import DuplicateTrackingNumber, InvalidParcelData
+from app.services.sizes import parse_size
 
 TRACKING_NUMBER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{2,63}")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
@@ -42,7 +42,7 @@ class RegistrationService:
     def register_parcel(self, courier_id: uuid.UUID, form: ParcelForm) -> Parcel:
         """Validates the form and saves the parcel with status REGISTERED. The pickup deadline is left empty;
         the deposit module sets it. Returns the parcel.
-        Raises InvalidParcelData, DuplicateTrackingNumber or StorageError. Nothing is saved when an error is raised."""
+        Raises InvalidParcelData, DuplicateTrackingNumber or a database error. Nothing is saved on error."""
         form = self.sanitize_and_validate(form)
         if self.uow.parcels.exists_by_tracking_number(form.tracking_number):
             raise DuplicateTrackingNumber("A parcel with this tracking number is already registered")

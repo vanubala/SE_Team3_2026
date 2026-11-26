@@ -3,8 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from .dependencies import Assignment, Courier, current_courier
-from .schemas import AssignIn, AssignmentOut, AvailableCompartmentsOut, CompartmentOut, error_responses
+from app.controllers.parcel_dependencies import Assignment, Courier, current_courier
+from app.schemas.parcels import AssignIn, AssignmentOut, AvailableCompartmentsOut, CompartmentOut, error_responses
 
 router = APIRouter(prefix="/api", tags=["Assignment"], dependencies=[Depends(current_courier)])
 

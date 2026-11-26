@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 from secrets import token_urlsafe
+from uuid import uuid4
 
 
 def main():
@@ -15,6 +16,7 @@ def main():
         'JWT_AUDIENCE=smart-locker-api', 'JWT_TTL_MINUTES=30',
         f'PICKUP_CODE_SECRET={pickup_secret}', 'TERMINAL_TOKEN_TTL_DAYS=365',
         'CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]',
+        f'PARCEL_ID_NAMESPACE={uuid4()}',
         f'DEMO_COURIER_PASSWORD={courier_password}', f'DEMO_ADMIN_PASSWORD={admin_password}', ''
     ])
     try:

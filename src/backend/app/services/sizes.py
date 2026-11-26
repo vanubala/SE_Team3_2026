@@ -1,6 +1,6 @@
 """Sizes, used by registration and assignment."""
-from ..errors import InvalidParcelData
-from ..models import SizeCategory
+from app.db.models import SizeCategory
+from app.services.parcel_errors import InvalidParcelData
 
 SIZE_RANK = {size: rank for rank, size in enumerate(SizeCategory)}
 

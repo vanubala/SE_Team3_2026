@@ -2,11 +2,11 @@ name: Register and assign tests
 on:
   pull_request:
     paths:
-      - 'implementation/register-assign/**'
+      - 'src/backend/**'
       - '.github/workflows/register-assign.yml'
   push:
     paths:
-      - 'implementation/register-assign/**'
+      - 'src/backend/**'
       - '.github/workflows/register-assign.yml'
   workflow_dispatch:
 permissions:
@@ -32,12 +32,21 @@ jobs:
       TEST_DATABASE_URL: postgresql+psycopg://register_assign_ci:ci-only-password@127.0.0.1:5432/register_assign_ci
     defaults:
       run:
-        working-directory: implementation/register-assign
+        working-directory: src/backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements-dev.txt ruff==0.17.6
-      - run: python -m ruff check .
-      - run: python -m pytest -q --cov=app --cov-branch --cov-report=term-missing
+      - name: Lint the registration and assignment files
+        run: >-
+          python -m ruff check --line-length 120 --select E,F,W,I,B,UP --target-version py312
+          --config "lint.isort.known-first-party = ['app', 'register_assign']"
+          app/controllers/registration_controller.py app/controllers/assignment_controller.py
+          app/controllers/parcel_dependencies.py app/controllers/parcel_http_errors.py
+          app/schemas/parcels.py app/services/registration_service.py app/services/assignment_service.py
+          app/services/sizes.py app/services/parcel_errors.py app/repositories/parcel_repository.py
+          app/repositories/locker_repository.py app/repositories/unit_of_work.py tests/register_assign
+      - name: Run all backend tests
+        run: python -m pytest -q --cov=app --cov-branch --cov-report=term-missing

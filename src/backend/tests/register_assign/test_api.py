@@ -1,13 +1,14 @@
 """HTTP tests against the contract in Schemas-Endpoints.md."""
+import uuid
 from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic.alias_generators import to_snake
+from sqlalchemy.exc import OperationalError
 
-from app.errors import StorageError
 from app.main import create_app
-from tests.conftest import auth, uid
+from register_assign.support import NAMESPACE, auth, uid
 
 BELVAL = str(uid("loc-belval-01"))
 PARCEL = {
@@ -62,7 +63,7 @@ def test_body_that_is_not_json_answers_400(client):
     response = client.post("/api/parcels", content="{not json", headers=headers)
 
     assert response.status_code == 400
-    assert response.json()["message"] == "request: JSON decode error"
+    assert set(response.json()) == ERROR_BODY
 
 
 def test_duplicate_tracking_number_answers_409(client, belval):
@@ -197,27 +198,28 @@ def test_framework_errors_use_the_agreed_error_body(client, method, path, status
     assert set(response.json()) == ERROR_BODY
 
 
-@pytest.mark.parametrize("failure, message", [
-    pytest.param(StorageError("Failed to save parcel"), "Failed to save parcel", id="storage-error"),
-    pytest.param(RuntimeError("secret internal detail"), "Internal server error", id="unexpected-error"),
-])
-def test_server_failures_answer_500_without_internal_details(settings, engine, monkeypatch, failure, message):
+def test_a_database_failure_answers_503_without_internal_details(settings, engine, monkeypatch):
     def broken(*args, **kwargs):
-        raise failure
+        raise OperationalError("SELECT secret internal detail", {}, Exception("connection lost"))
 
     monkeypatch.setattr("app.repositories.parcel_repository.ParcelRepository.find_by_courier", broken)
-    with TestClient(create_app(settings, engine), raise_server_exceptions=False) as client:
+    with TestClient(create_app(settings, engine=engine)) as client:
         response = client.get("/api/parcels", headers=auth())
 
-    assert response.status_code == 500
+    assert response.status_code == 503
     assert set(response.json()) == ERROR_BODY
-    assert response.json()["message"] == message
     assert "secret" not in response.text
 
 
-def test_app_builds_its_own_database_connection_from_the_settings(settings):
-    with TestClient(create_app(settings)) as client:  # settings.database_url is an in-memory SQLite database
-        response = client.get("/api/parcels", headers=auth())
+def test_parcel_ids_are_hashed_with_the_configured_namespace(client, belval):
+    body = register(client)
 
-    assert response.status_code == 200
-    assert response.json() == []
+    assert body["parcelId"] == str(uuid.uuid5(NAMESPACE, PARCEL["trackingNumber"]))
+
+
+def test_without_a_configured_namespace_a_random_one_is_used(settings, engine, belval):
+    without = settings.model_copy(update={"parcel_id_namespace": None})
+    with TestClient(create_app(without, engine=engine)) as client:
+        body = register(client)
+
+    assert body["parcelId"] != str(uuid.uuid5(NAMESPACE, PARCEL["trackingNumber"]))

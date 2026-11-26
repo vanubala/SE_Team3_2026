@@ -1,6 +1,6 @@
 """Repository tests on the database."""
-from app.models import Parcel
-from tests.conftest import NOW, add_locker, uid
+from app.db.models import Parcel
+from register_assign.support import NOW, add_locker, uid
 
 
 def add_parcel(session, parcel="p-1", status="REGISTERED", courier="courier-1", tracking_number="LU-1"):

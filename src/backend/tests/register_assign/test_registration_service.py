@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 import pytest
 from sqlalchemy.exc import IntegrityError, OperationalError
 
-from app.errors import DuplicateTrackingNumber, InvalidParcelData, StorageError
+from app.services.parcel_errors import DuplicateTrackingNumber, InvalidParcelData
 from app.services.registration_service import ParcelForm, RegistrationService
-from tests.conftest import NAMESPACE, NOW, TOMORROW, add_locker, uid
+from register_assign.support import NAMESPACE, NOW, TOMORROW, add_locker, uid
 
 COURIER_1 = uid("courier-1")
 COURIER_2 = uid("courier-2")
@@ -176,7 +176,7 @@ def test_two_requests_saving_the_same_tracking_number_give_one_duplicate(uow, mo
     pytest.param(IntegrityError("INSERT INTO parcels", {}, Exception("foreign key")), id="other-constraint"),
     pytest.param(OperationalError("INSERT INTO parcels", {}, Exception("connection lost")), id="database-down"),
 ])
-def test_a_database_failure_while_saving_is_a_storage_error(uow, monkeypatch, failure):
+def test_a_database_failure_while_saving_is_passed_on_and_nothing_is_saved(uow, monkeypatch, failure):
     real_flush = uow.session.flush
     failures = [failure]
 
@@ -187,7 +187,7 @@ def test_a_database_failure_while_saving_is_a_storage_error(uow, monkeypatch, fa
 
     monkeypatch.setattr(uow.session, "flush", flush_failing_once)
 
-    with pytest.raises(StorageError):
+    with pytest.raises(type(failure)):
         service(uow).register_parcel(COURIER_1, form())
 
     assert not uow.parcels.exists_by_tracking_number("LU-987654321")
