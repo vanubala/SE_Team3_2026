@@ -85,7 +85,7 @@ export function LoginUI() {
 
             <Box sx={styles.footerRow}>
               <Typography variant="caption" sx={styles.footerText}>
-                Forgot your password ? - {" "}
+                Forgot your password ? -{" "}
               </Typography>
               <Link
                 component={RouterLink}

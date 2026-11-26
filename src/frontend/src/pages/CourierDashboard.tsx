@@ -33,7 +33,17 @@ export function CourierDashboard() {
   const [registerError, setRegisterError] = useState<string | null>(null);
 
   // UC2 Compartment Assignment dialog state
-  const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>(null);
+  //const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>(null);
+
+  // Temporary preview state in CourierDashboard.tsx to inspect the modal immediately:
+  const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>({
+    parcelId: "p-preview-01",
+    trackingNumber: "LU-2026-88412",
+    sizeCategory: "MEDIUM",
+    status: "REGISTERED",
+    preferredLockerId: "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
+    recipientContact: "recipient@example.lu",
+  });
 
   const loadParcels = useCallback(async () => {
     setLoading(true);

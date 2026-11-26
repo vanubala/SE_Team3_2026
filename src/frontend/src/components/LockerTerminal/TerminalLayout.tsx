@@ -21,9 +21,7 @@ export interface TerminalOutletContext {
 
 const STATION = {
   id: import.meta.env.VITE_LOCKER_ID || "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
-  name:
-    import.meta.env.VITE_LOCKER_NAME ||
-    "Belval Plaza Station — Esch-sur-Alzette",
+  name: import.meta.env.VITE_LOCKER_NAME || "Maison du Savoir — Belval Campus",
 };
 
 export function TerminalLayout() {

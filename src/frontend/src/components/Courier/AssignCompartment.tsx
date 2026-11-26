@@ -29,7 +29,83 @@ interface AssignCompartmentDialogProps {
 const STATIONS = [
   {
     id: "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
-    name: "Belval Plaza Station — Esch-sur-Alzette",
+    name: "Maison du Savoir — Belval Campus",
+  },
+];
+
+// Add this temporary preview array at the top of AssignCompartment.tsx (remove once backend is connected)
+const PREVIEW_COMPARTMENTS: Compartment[] = [
+  {
+    compartmentId: "c-01",
+    compartmentNumber: 1,
+    sizeCategory: "SMALL",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-02",
+    compartmentNumber: 2,
+    sizeCategory: "SMALL",
+    status: "OCCUPIED",
+  },
+  {
+    compartmentId: "c-03",
+    compartmentNumber: 3,
+    sizeCategory: "SMALL",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-04",
+    compartmentNumber: 4,
+    sizeCategory: "SMALL",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-05",
+    compartmentNumber: 5,
+    sizeCategory: "MEDIUM",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-06",
+    compartmentNumber: 6,
+    sizeCategory: "MEDIUM",
+    status: "RESERVED",
+  },
+  {
+    compartmentId: "c-07",
+    compartmentNumber: 7,
+    sizeCategory: "MEDIUM",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-08",
+    compartmentNumber: 8,
+    sizeCategory: "MEDIUM",
+    status: "OCCUPIED",
+  },
+  {
+    compartmentId: "c-09",
+    compartmentNumber: 9,
+    sizeCategory: "LARGE",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-10",
+    compartmentNumber: 10,
+    sizeCategory: "LARGE",
+    status: "MAINTENANCE",
+  },
+  {
+    compartmentId: "c-11",
+    compartmentNumber: 11,
+    sizeCategory: "LARGE",
+    status: "AVAILABLE",
+  },
+  {
+    compartmentId: "c-12",
+    compartmentNumber: 12,
+    sizeCategory: "LARGE",
+    status: "AVAILABLE",
   },
 ];
 
@@ -70,11 +146,15 @@ export function AssignCompartmentDialog({
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(
-          err instanceof ApiError
-            ? err.message
-            : "Unable to load available compartments."
-        );
+        // Temporary offline preview fallback — remove when backend is running
+        setCompartments(PREVIEW_COMPARTMENTS);
+        setRecommendedId("c-07");
+        setSelectedCompId("c-07");
+        // setError(
+        //   err instanceof ApiError
+        //     ? err.message
+        //     : "Unable to load available compartments."
+        // );
       })
       .finally(() => {
         if (!cancelled) setLoadingOptions(false);

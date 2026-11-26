@@ -35,8 +35,7 @@ const FILTERS = [
 ];
 
 const LOCKER_NAMES: Record<string, string> = {
-  "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa":
-    "Belval Plaza Station — Esch-sur-Alzette",
+  "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa": "Maison du Savoir — Belval Campus",
 };
 
 function formatDeliveryDate(iso?: string): string {
