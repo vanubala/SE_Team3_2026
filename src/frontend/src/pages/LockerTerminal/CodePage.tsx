@@ -42,6 +42,7 @@ export function TerminalCodePage() {
             parcelId: res.parcelId,
             compartmentId: res.compartmentId,
             compartmentNumber: res.compartmentNumber,
+            pickupSessionToken: res.pickupSessionToken,
           },
         });
       } else {
@@ -50,6 +51,7 @@ export function TerminalCodePage() {
           state: {
             mode,
             parcelId: res.parcelId,
+            compartmentId: res.compartmentId,
             compartmentNumber: res.compartmentNumber,
           },
         });

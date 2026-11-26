@@ -122,7 +122,9 @@ class Parcel(Base):
 
 class PickupCode(Base):
     __tablename__ = 'pickup_codes'
-    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_pickup_codes_attempts'),)
+    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_pickup_codes_attempts'),
+                      # Added by migration 0002_unique_pickup_code_hash (UC3).
+                      UniqueConstraint('code_hash', name='uq_pickup_codes_code_hash'),)
     code_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     parcel_id: Mapped[UUID] = mapped_column(ForeignKey('parcels.parcel_id'), unique=True)
     code_hash: Mapped[str] = mapped_column(String(255))
@@ -131,3 +133,17 @@ class PickupCode(Base):
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TerminalLockout(Base):
+    """Terminal-wide brute-force counter (NFR_02).
+
+    A wrong PIN cannot be attributed to any one pickup code, so consecutive
+    failures are counted per locker station rather than per code.
+    """
+    __tablename__ = 'terminal_lockouts'
+    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_terminal_lockouts_attempts'),)
+    locker_id: Mapped[UUID] = mapped_column(ForeignKey('lockers.locker_id'), primary_key=True)
+    failed_attempts: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    last_failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

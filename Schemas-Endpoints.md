@@ -88,6 +88,18 @@ Single-use credentials generated upon physical deposit and verified at the termi
 | `expires_at` | `TIMESTAMP` | `NOT NULL` | Matches `Parcels.pickup_deadline` |
 | `used_at` | `TIMESTAMP` | `NULLABLE` | Populated upon collection to invalidate code |
 
+> `code_hash` is `HMAC-SHA256(PICKUP_CODE_SECRET, pin)` as lowercase hex, so a terminal looks a PIN up in one indexed query. Deposit (UC3) creates the code and sends the plain PIN to the recipient; only the hash is stored. `code_hash` is unique across the table (`uq_pickup_codes_code_hash`, migration `0002_unique_pickup_code_hash`); deposit retries with a new PIN on a collision. On collection, pickup replaces the hash with `retired:<code_id>` so the PIN can be issued again.
+
+### 1.6 `TerminalLockouts`
+Terminal-wide brute-force protection (`NFR_02`). A wrong PIN cannot be attributed to a specific code, so failures are counted per locker station.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `locker_id` | `UUID` | `PK, FK -> Lockers.locker_id` | Terminal / station |
+| `failed_attempts` | `INT` | `DEFAULT 0` | Consecutive failed PIN attempts (reset on success, or when 15 min pass between failures) |
+| `last_failed_at` | `TIMESTAMP` | `NULLABLE` | Time of the latest failed attempt |
+| `locked_until` | `TIMESTAMP` | `NULLABLE` | Set to now + 15 min on the 5th consecutive failure |
+
 ---
 
 ## 2. REST API Endpoints
@@ -213,7 +225,7 @@ Atomically reserves a compartment (`RESERVED`) and updates the parcel to `ASSIGN
 
 #### `POST /api/terminal/deposit/unlock`
 Verifies an `ASSIGNED` parcel at the physical kiosk and commands the compartment door to unlock (`< 3s`, `NFR_03`).
-* **Access:** Kiosk Terminal (Parcel ID verification)
+* **Access:** Kiosk Terminal (`Bearer` terminal credential for this locker; Parcel ID verification)
 * **Request Body:**
 ```json
 {
@@ -234,7 +246,7 @@ Verifies an `ASSIGNED` parcel at the physical kiosk and commands the compartment
 
 #### `POST /api/terminal/deposit/confirm`
 Called when the compartment door sensor detects closure; transitions parcel to `READY_FOR_PICKUP`, updates compartment to `OCCUPIED`, sets 7-day deadline, generates single-use PIN, and triggers async recipient notification.
-* **Access:** Kiosk Terminal
+* **Access:** Kiosk Terminal (`Bearer` terminal credential for this locker)
 * **Request Body:**
 ```json
 {
@@ -260,7 +272,7 @@ Called when the compartment door sensor detects closure; transitions parcel to `
 
 #### `POST /api/terminal/pickup/verify`
 Validates a guest recipient's 6-digit PIN / QR code at the physical terminal and unlocks the compartment (`NFR_02`, `NFR_03`).
-* **Access:** Public Kiosk Terminal (Guest-First MVP)
+* **Access:** Kiosk Terminal (`Bearer` terminal credential for this locker); the guest recipient needs no account (Guest-First MVP)
 * **Request Body:**
 ```json
 {
@@ -274,24 +286,34 @@ Validates a guest recipient's 6-digit PIN / QR code at the physical terminal and
   "parcelId": "p-7a8b9c0d",
   "compartmentId": "comp-04",
   "compartmentNumber": 4,
-  "doorCommand": "UNLOCK"
+  "doorCommand": "UNLOCK",
+  "pickupSessionToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
-* **Errors:**
-  * `401 Unauthorized` — Invalid or expired PIN (increments `failed_attempts`).
-  * `423 Locked` — Terminal locked for 15 minutes after 5 consecutive failed attempts (`NFR_02`).
+* `pickupSessionToken` is a signed token valid for 10 minutes and bound to this parcel, compartment and station. It must be sent to `/confirm`. The PIN itself stays valid until the door closes, so a recipient can retry if the door fails to open.
+* **Errors** (standard envelope plus the extra field shown):
+  * `400 Bad Request` — `pickupCode` is not exactly 6 digits, or `lockerId` is not a UUID (not counted as a failed attempt).
+  * `401 Unauthorized` — Invalid, expired, already used, or other-station PIN (increments the terminal's `failed_attempts`). Body adds `"remainingAttempts": 3`.
+  * `401 Unauthorized` without `remainingAttempts` — missing or invalid terminal credential.
+  * `403 Forbidden` — the terminal credential belongs to another locker.
+  * `404 Not Found` — Unknown `lockerId`.
+  * `503 Service Unavailable` — `PICKUP_CODE_SECRET` is not configured.
+  * `423 Locked` — Terminal locked for 15 minutes after 5 consecutive failed attempts (`NFR_02`); returned on the 5th failure and for every attempt, correct or not, until it expires. Body adds `"retryAfterSeconds": 900`; `Retry-After` header is set.
 
 #### `POST /api/terminal/pickup/confirm`
 Finalizes collection once the recipient closes the compartment door; marks parcel `COLLECTED`, invalidates the pickup code, and frees the compartment (`AVAILABLE`).
-* **Access:** Public Kiosk Terminal
+* **Access:** Kiosk Terminal (`Bearer` terminal credential for this locker)
 * **Request Body:**
 ```json
 {
   "parcelId": "p-7a8b9c0d",
   "compartmentId": "comp-04",
-  "doorClosed": true
+  "doorClosed": true,
+  "parcelDetected": false,
+  "pickupSessionToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
+* `parcelDetected` is optional (default `false`).
 * **Response (`200 OK`):**
 ```json
 {
@@ -300,6 +322,8 @@ Finalizes collection once the recipient closes the compartment door; marks parce
   "compartmentStatus": "AVAILABLE"
 }
 ```
+* Retrying a confirm that already succeeded returns the same `200` body. A compartment that an admin put into `MAINTENANCE` keeps that status.
+* **Errors:** `400` (malformed body), `401` (invalid terminal credential, or a missing, forged, expired or mismatched `pickupSessionToken`, including one issued at another station), `404` (unknown parcel), `409` (door still open, parcel still detected, or parcel not awaiting pickup in this compartment).
 
 ---
 

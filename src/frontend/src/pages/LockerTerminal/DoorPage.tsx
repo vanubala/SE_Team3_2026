@@ -15,6 +15,7 @@ interface DoorLocationState {
   parcelId: string;
   compartmentNumber: number;
   compartmentId?: string;
+  pickupSessionToken?: string;
 }
 
 export function TerminalDoorPage() {
@@ -36,17 +37,24 @@ export function TerminalDoorPage() {
     setFeedback(null);
 
     try {
-      if (state.mode === "PICKUP" && state.compartmentId) {
-        await terminalApi.confirmPickup(state.parcelId, state.compartmentId);
+      if (state.mode === "PICKUP") {
+        if (!state.compartmentId || !state.pickupSessionToken) {
+          throw new TerminalApiError("Pickup session missing. Please enter your code again.", "INVALID_CODE");
+        }
+        await terminalApi.confirmPickup(
+          state.parcelId,
+          state.compartmentId,
+          state.pickupSessionToken
+        );
         setFeedback({
           severity: "success",
           message: `Compartment #${state.compartmentNumber} closed. Parcel collected—thank you!`,
         });
       } else {
-        await terminalApi.confirmDeposit(
-          state.parcelId,
-          state.compartmentNumber
-        );
+        if (!state.compartmentId) {
+          throw new TerminalApiError("Deposit session missing. Please enter the Parcel ID again.", "CONFLICT");
+        }
+        await terminalApi.confirmDeposit(state.parcelId, state.compartmentId);
         setFeedback({
           severity: "success",
           message: `Compartment #${state.compartmentNumber} closed. Parcel deposited & recipient notified!`,
