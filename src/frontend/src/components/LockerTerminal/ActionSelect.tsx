@@ -28,7 +28,6 @@ export function ActionSelectStep({ onSelectMode }: ActionSelectStepProps) {
         spacing={4}
         sx={styles.buttonRow}
       >
-        {/* PICK UP — Primary / Most Frequent Action (Filled Cobalt Blue Circle) */}
         <Card elevation={3} sx={styles.pickupFilledCircle}>
           <CardActionArea
             onClick={() => onSelectMode("PICKUP")}
@@ -53,12 +52,10 @@ export function ActionSelectStep({ onSelectMode }: ActionSelectStepProps) {
               PICK UP
             </Typography>
             <Typography variant="caption" sx={styles.filledCircleSubtext}>
-              Collect a Parcel
+              I have a pickup code
             </Typography>
           </CardActionArea>
         </Card>
-
-        {/* DROP OFF — Secondary Action (Outlined White Circle) */}
         <Card elevation={0} sx={styles.depositOutlinedCircle}>
           <CardActionArea
             onClick={() => onSelectMode("DEPOSIT")}
@@ -82,7 +79,7 @@ export function ActionSelectStep({ onSelectMode }: ActionSelectStepProps) {
               DROP OFF
             </Typography>
             <Typography variant="caption" sx={styles.outlinedCircleSubtext}>
-              Courier Deposit
+              I am delivering
             </Typography>
           </CardActionArea>
         </Card>

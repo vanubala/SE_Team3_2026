@@ -20,8 +20,10 @@ export interface TerminalOutletContext {
 }
 
 const STATION = {
-  id: "loc-belval-01",
-  name: "Maison du Savoir — Belval Campus",
+  id: import.meta.env.VITE_LOCKER_ID || "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
+  name:
+    import.meta.env.VITE_LOCKER_NAME ||
+    "Belval Plaza Station — Esch-sur-Alzette",
 };
 
 export function TerminalLayout() {
