@@ -72,10 +72,15 @@ export const terminalApi = {
       pickupCode,
     }),
 
-  confirmPickup: (parcelId: string, compartmentId: string) =>
+  confirmPickup: (
+    parcelId: string,
+    compartmentId: string,
+    pickupSessionToken: string
+  ) =>
     postJson<PickupConfirmResponse>("/terminal/pickup/confirm", {
       parcelId,
       compartmentId,
       doorClosed: true,
+      pickupSessionToken,
     }),
 };

@@ -42,6 +42,7 @@ export function TerminalCodePage() {
             parcelId: res.parcelId,
             compartmentId: res.compartmentId,
             compartmentNumber: res.compartmentNumber,
+            pickupSessionToken: res.pickupSessionToken,
           },
         });
       } else {
