@@ -53,3 +53,14 @@ def test_find_by_courier_filters_by_courier_and_status(uow, session):
 
     assert [p.parcel_id for p in uow.parcels.find_by_courier(uid("courier-1"))] == [uid("p-1"), uid("p-3")]
     assert [p.parcel_id for p in uow.parcels.find_by_courier(uid("courier-1"), "ASSIGNED")] == [uid("p-3")]
+
+
+def test_save_reports_a_tracking_number_that_is_already_taken(uow, session):
+    add_parcel(session, "p-1", tracking_number="LU-1")
+    same_number = Parcel(
+        parcel_id=uid("p-2"), tracking_number="LU-1", size_category="SMALL", status="REGISTERED",
+        registered_by_courier_id=uid("courier-1"), recipient_contact="recipient@example.lu", registered_at=NOW,
+    )
+
+    assert uow.parcels.save(same_number) is False
+    assert uow.parcels.find_by_id(uid("p-2")) is None

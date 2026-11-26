@@ -53,7 +53,7 @@ All routes need a courier token (`require_courier`): 401 without a valid token, 
 | Function | Input | Returns |
 |---|---|---|
 | `exists_by_tracking_number` | tracking number | true or false |
-| `save` | new parcel | nothing; raises `DuplicateTrackingNumber` or the database error |
+| `save` | new parcel | true if saved, false if the tracking number is already taken; raises the database error otherwise |
 | `find_by_id` | parcel ID | the parcel or `None` |
 | `find_by_courier` | courier ID, status (optional) | the parcels, oldest first |
 | `update_assignment` | parcel ID, compartment ID | true if the parcel was `REGISTERED` and is now `ASSIGNED` |

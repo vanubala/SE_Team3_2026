@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.models import Parcel, ParcelStatus
-from app.services.parcel_errors import DuplicateTrackingNumber
 
 
 class ParcelRepository:
@@ -17,17 +16,19 @@ class ParcelRepository:
         query = select(Parcel.parcel_id).where(Parcel.tracking_number == tracking_number)
         return self.session.scalar(query) is not None
 
-    def save(self, parcel: Parcel) -> None:
-        """Adds the parcel to the session. Raises DuplicateTrackingNumber, or the database error."""
+    def save(self, parcel: Parcel) -> bool:
+        """Adds the parcel to the session. Returns False if a parcel with the same tracking number already exists.
+        Raises the database error for any other failure."""
         self.session.add(parcel)
         try:
             self.session.flush()
-        except IntegrityError as exc:
+        except IntegrityError:
             # After a failed INSERT, PostgreSQL rejects further queries until the transaction is rolled back.
             self.session.rollback()
             if self.exists_by_tracking_number(parcel.tracking_number):
-                raise DuplicateTrackingNumber("A parcel with this tracking number is already registered") from exc
+                return False
             raise
+        return True
 
     def find_by_id(self, parcel_id: UUID) -> Parcel | None:
         return self.session.get(Parcel, parcel_id)
