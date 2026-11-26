@@ -14,7 +14,7 @@ from app.db.seed import seed_demo, demo_id
 from app.security.passwords import verify_password
 
 ROOT=Path(__file__).resolve().parents[1]
-TABLES={'users','lockers','compartments','parcels','pickup_codes','alembic_version'}
+TABLES={'users','lockers','compartments','parcels','pickup_codes','terminal_lockouts','alembic_version'}
 
 
 def migrate(connection, direction='up'):

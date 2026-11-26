@@ -131,3 +131,17 @@ class PickupCode(Base):
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TerminalLockout(Base):
+    """Terminal-wide brute-force counter (NFR_02).
+
+    A wrong PIN cannot be attributed to any one pickup code, so consecutive
+    failures are counted per locker station rather than per code.
+    """
+    __tablename__ = 'terminal_lockouts'
+    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_terminal_lockouts_attempts'),)
+    locker_id: Mapped[UUID] = mapped_column(ForeignKey('lockers.locker_id'), primary_key=True)
+    failed_attempts: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    last_failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -63,10 +63,11 @@ import {
     verifyPickupPin: (lockerId: string, pickupCode: string) =>
       postJson<PickupVerifyResponse>('/terminal/pickup/verify', { lockerId, pickupCode }),
   
-    confirmPickup: (parcelId: string, compartmentId: string) =>
+    confirmPickup: (parcelId: string, compartmentId: string, pickupSessionToken: string) =>
       postJson<PickupConfirmResponse>('/terminal/pickup/confirm', {
         parcelId,
         compartmentId,
         doorClosed: true,
+        pickupSessionToken,
       }),
   };

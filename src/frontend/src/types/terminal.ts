@@ -18,12 +18,14 @@ export interface PickupVerifyResponse {
   compartmentId: string;
   compartmentNumber: number;
   doorCommand: 'UNLOCK';
+  /** Short-lived proof of a successful PIN check; required to confirm collection. */
+  pickupSessionToken: string;
 }
 
 export interface PickupConfirmResponse {
   parcelId: string;
   status: 'COLLECTED';
-  compartmentStatus: 'AVAILABLE';
+  compartmentStatus: 'AVAILABLE' | 'MAINTENANCE';
 }
 
 export class TerminalApiError extends Error {
