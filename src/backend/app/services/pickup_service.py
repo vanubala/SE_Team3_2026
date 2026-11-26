@@ -8,15 +8,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from app.db.models import CompartmentStatus, ParcelStatus, PickupCode
+from app.db.models import CompartmentStatus, ParcelStatus
 from app.repositories.pickup_repository import PickupRepository
 from app.security.pickup_codes import (InvalidPickupSession, PickupCodeHasher, PickupSession,
-                                       PickupSessionTokens, generate_pickup_code)
+                                       PickupSessionTokens)
 
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
 # Failures further apart than this are not "consecutive" and start a new count.
 FAILURE_WINDOW = timedelta(minutes=15)
+# Never a valid hex HMAC, so a retired row can never match a PIN lookup.
+RETIRED_HASH_PREFIX = 'retired:'
 
 
 def utcnow() -> datetime:
@@ -128,13 +130,15 @@ class PickupService:
         return UnlockResult(parcel.parcel_id, compartment.compartment_id,
                             compartment.compartment_number, token)
 
-    def confirm_collection(self, parcel_id: UUID, compartment_id: UUID, session_token: str,
-                           door_closed: bool, parcel_detected: bool) -> CollectionResult:
+    def confirm_collection(self, terminal_locker_id: UUID, parcel_id: UUID, compartment_id: UUID,
+                           session_token: str, door_closed: bool,
+                           parcel_detected: bool) -> CollectionResult:
         try:
             session = self.sessions.verify(session_token)
         except InvalidPickupSession as exc:
             raise PickupSessionRejected() from exc
-        if session.parcel_id != parcel_id or session.compartment_id != compartment_id:
+        if (session.parcel_id != parcel_id or session.compartment_id != compartment_id
+                or session.locker_id != terminal_locker_id):
             raise PickupSessionRejected()
         if not door_closed:
             raise CollectionConflict('Compartment door is still open')
@@ -161,6 +165,10 @@ class PickupService:
             parcel.status = ParcelStatus.COLLECTED
             parcel.collected_at = now
             code.used_at = now  # single-use: invalidated on door closure (NFR_02)
+            # code_hash is unique table-wide (UC3 migration 0002). Retiring the
+            # hash of a used code frees that PIN for future deposits, so the
+            # 1,000,000 PIN space is not used up by historical rows.
+            code.code_hash = f'{RETIRED_HASH_PREFIX}{code.code_id}'
             if compartment.status == CompartmentStatus.OCCUPIED:
                 compartment.status = CompartmentStatus.AVAILABLE
                 compartment.version += 1
@@ -171,36 +179,3 @@ class PickupService:
             self.repo.rollback()
             raise
 
-
-class PickupCodeIssuer:
-    """Creates a parcel's single-use PIN. Called by the deposit flow (UC3).
-
-    Returns the plain PIN for the notification gateway; only its hash is kept.
-    The caller's transaction commits it together with the deposit.
-    """
-    MAX_GENERATION_TRIES = 20
-
-    def __init__(self, repo: PickupRepository, hasher: PickupCodeHasher,
-                 clock: Callable[[], datetime] = utcnow):
-        self.repo = repo
-        self.hasher = hasher
-        self.clock = clock
-
-    def issue(self, parcel_id: UUID, locker_id: UUID, expires_at: datetime) -> str:
-        now = self.clock()
-        for _ in range(self.MAX_GENERATION_TRIES):
-            code = generate_pickup_code()
-            code_hash = self.hasher.hash(code)
-            # A PIN must identify exactly one parcel at its station.
-            if not self.repo.code_hash_in_use(locker_id, code_hash, now):
-                break
-        else:
-            raise RuntimeError('Could not generate a unique pickup code')
-        existing = self.repo.lock_code_for_parcel(parcel_id)
-        if existing is None:
-            self.repo.add(PickupCode(parcel_id=parcel_id, code_hash=code_hash, failed_attempts=0,
-                                     issued_at=now, expires_at=expires_at))
-        else:
-            existing.code_hash, existing.issued_at, existing.expires_at = code_hash, now, expires_at
-            existing.used_at, existing.failed_attempts, existing.locked_until = None, 0, None
-        return code

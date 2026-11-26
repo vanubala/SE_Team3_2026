@@ -6,13 +6,14 @@ from secrets import token_urlsafe
 
 def main():
     target = Path(__file__).resolve().parent / '.env'
-    db_password, jwt_secret, courier_password, admin_password = (token_urlsafe(32) for _ in range(4))
+    db_password, jwt_secret, courier_password, admin_password, pickup_secret = (token_urlsafe(32) for _ in range(5))
     body = '\n'.join([
         'POSTGRES_DB=smart_locker', 'POSTGRES_USER=locker_dev',
         f'POSTGRES_PASSWORD={db_password}',
         f'DATABASE_URL=postgresql+psycopg://locker_dev:{db_password}@127.0.0.1:5432/smart_locker',
         f'JWT_SECRET={jwt_secret}', 'JWT_ISSUER=smart-locker-auth',
         'JWT_AUDIENCE=smart-locker-api', 'JWT_TTL_MINUTES=30',
+        f'PICKUP_CODE_SECRET={pickup_secret}', 'TERMINAL_TOKEN_TTL_DAYS=365',
         'CORS_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]',
         f'DEMO_COURIER_PASSWORD={courier_password}', f'DEMO_ADMIN_PASSWORD={admin_password}', ''
     ])

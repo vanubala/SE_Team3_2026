@@ -1,4 +1,5 @@
 """Guest pickup at the locker terminal (UC4, Schemas-Endpoints §2.5)."""
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ from app.schemas.pickup import (PickupConfirmRequest, PickupConfirmResponse,
 from app.services.pickup_service import (CollectionConflict, InvalidPickupCode, LockerNotFound,
                                          ParcelNotFound, PickupService, PickupSessionRejected,
                                          TerminalLocked)
+from app.security.terminal_auth import TerminalPrincipal, require_locker_terminal
 
 router = APIRouter(prefix='/api/terminal/pickup', tags=['Guest pickup'])
 
@@ -17,6 +19,8 @@ NO_STORE = {'Cache-Control': 'no-store'}
 
 
 def get_pickup_service(request: Request, db: Session = Depends(get_db)) -> PickupService:
+    if request.app.state.pickup_codes is None:
+        raise HTTPException(503, 'Pickup is not configured: set PICKUP_CODE_SECRET', headers=NO_STORE)
     return PickupService(PickupRepository(db), request.app.state.pickup_codes,
                          request.app.state.pickup_sessions)
 
@@ -28,9 +32,13 @@ def _error(status: int, message: str, headers: dict | None = None, **extra) -> J
 
 @router.post('/verify', response_model=PickupVerifyResponse,
              responses={400: {'description': 'Invalid request'}, 401: {'description': 'Invalid or expired pickup code'},
+                        403: {'description': 'Terminal belongs to another locker'},
                         404: {'description': 'Unknown locker'}, 423: {'description': 'Terminal locked'}})
 def verify(payload: PickupVerifyRequest, response: Response,
+           terminal: TerminalPrincipal = Depends(require_locker_terminal),
            service: PickupService = Depends(get_pickup_service)):
+    if UUID(terminal.locker_id) != payload.lockerId:
+        return _error(403, 'This terminal cannot operate the requested locker')
     try:
         result = service.verify_and_unlock(payload.lockerId, payload.pickupCode)
     except LockerNotFound:
@@ -48,12 +56,15 @@ def verify(payload: PickupVerifyRequest, response: Response,
 
 
 @router.post('/confirm', response_model=PickupConfirmResponse,
-             responses={400: {'description': 'Invalid request'}, 401: {'description': 'Invalid pickup session'},
+             responses={400: {'description': 'Invalid request'},
+                        401: {'description': 'Invalid terminal credential or pickup session'},
                         404: {'description': 'Unknown parcel'}, 409: {'description': 'Collection not possible'}})
 def confirm(payload: PickupConfirmRequest, response: Response,
+            terminal: TerminalPrincipal = Depends(require_locker_terminal),
             service: PickupService = Depends(get_pickup_service)):
     try:
-        result = service.confirm_collection(payload.parcelId, payload.compartmentId,
+        result = service.confirm_collection(UUID(terminal.locker_id), payload.parcelId,
+                                            payload.compartmentId,
                                             payload.pickupSessionToken, payload.doorClosed,
                                             payload.parcelDetected)
     except PickupSessionRejected as exc:

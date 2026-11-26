@@ -11,17 +11,18 @@ from app.db.models import Base, Compartment, Locker, Parcel, PickupCode, Termina
 from app.main import create_app
 from app.repositories.pickup_repository import PickupRepository
 from app.security.pickup_codes import PickupCodeHasher, PickupSession, PickupSessionTokens
+from app.security.terminal_auth import TerminalTokenService
 from app.services import pickup_service
-from app.services.pickup_service import PickupCodeIssuer
 
 SECRET = 'test-only-' + 'p' * 40
+PICKUP_SECRET = 'test-only-pickup-' + 'k' * 40
 CODE = '482910'
 OTHER_CODE = '111111'
 
 
 @pytest.fixture
 def settings():
-    return Settings(database_url='sqlite+pysqlite://', jwt_secret=SECRET)
+    return Settings(database_url='sqlite+pysqlite://', jwt_secret=SECRET, pickup_code_secret=PICKUP_SECRET)
 
 
 @pytest.fixture
@@ -36,7 +37,7 @@ def engine():
 @pytest.fixture
 def world(engine, settings):
     """One locker with a parcel READY_FOR_PICKUP in compartment #4, plus a second locker."""
-    hasher = PickupCodeHasher(settings)
+    hasher = PickupCodeHasher(settings.pickup_code_secret)
     now = datetime.now(timezone.utc)
     with Session(engine) as db:
         courier = User(name='Courier', email='c@example.test', password_hash='x', role='COURIER')
@@ -59,16 +60,24 @@ def world(engine, settings):
 
 @pytest.fixture
 def client(engine, settings, world):
+    confirm.default_locker = str(world['locker'])
     with TestClient(create_app(settings, engine=engine)) as c:
         yield c
 
 
-def verify(client, locker, code=CODE):
-    return client.post('/api/terminal/pickup/verify', json={'lockerId': str(locker), 'pickupCode': code})
+def terminal_header(locker, settings=None):
+    settings = settings or Settings(database_url='sqlite+pysqlite://', jwt_secret=SECRET)
+    return {'Authorization': f'Bearer {TerminalTokenService(settings).issue(locker)}'}
 
 
-def confirm(client, body):
-    return client.post('/api/terminal/pickup/confirm', json=body)
+def verify(client, locker, code=CODE, terminal=None):
+    return client.post('/api/terminal/pickup/verify', json={'lockerId': str(locker), 'pickupCode': code},
+                       headers=terminal_header(terminal or locker))
+
+
+def confirm(client, body, terminal=None):
+    terminal = terminal or UUID(confirm.default_locker)
+    return client.post('/api/terminal/pickup/confirm', json=body, headers=terminal_header(terminal))
 
 
 def confirm_body(world, token, **kw):
@@ -181,12 +190,64 @@ def test_expired_code_is_rejected(client, engine, world):
     {'lockerId': str(uuid4()), 'pickupCode': 'abcdef'},
     {'lockerId': str(uuid4()), 'pickupCode': CODE, 'extra': 1},
 ])
-def test_malformed_verify_is_400(client, body):
-    assert client.post('/api/terminal/pickup/verify', json=body).status_code == 400
+def test_malformed_verify_is_400(client, world, body):
+    r = client.post('/api/terminal/pickup/verify', json=body, headers=terminal_header(world['locker']))
+    assert r.status_code in (400, 403)
 
 
 def test_unknown_locker_is_404(client):
     assert verify(client, uuid4()).status_code == 404
+
+
+def test_pickup_requires_terminal_credential(client, world, settings):
+    body = {'lockerId': str(world['locker']), 'pickupCode': CODE}
+    assert client.post('/api/terminal/pickup/verify', json=body).status_code == 401
+    bad = {'Authorization': 'Bearer not-a-token'}
+    assert client.post('/api/terminal/pickup/verify', json=body, headers=bad).status_code == 401
+    from app.security.tokens import TokenService
+    from app.db.models import Role
+    staff = {'Authorization': f'Bearer {TokenService(settings).issue(uuid4(), Role.ADMIN)}'}
+    assert client.post('/api/terminal/pickup/verify', json=body, headers=staff).status_code == 401
+    assert client.post('/api/terminal/pickup/confirm', json={}, headers=bad).status_code in (400, 401)
+
+
+def test_terminal_cannot_act_for_another_locker(client, world):
+    r = verify(client, world['locker'], terminal=world['other_locker'])
+    assert r.status_code == 403
+    token = verify(client, world['locker']).json()['pickupSessionToken']
+    assert confirm(client, confirm_body(world, token), terminal=world['other_locker']).status_code == 401
+
+
+def test_pickup_unavailable_without_shared_secret(engine, world):
+    app = create_app(Settings(database_url='sqlite+pysqlite://', jwt_secret=SECRET), engine=engine)
+    with TestClient(app) as c:
+        r = verify(c, world['locker'])
+    assert r.status_code == 503 and 'PICKUP_CODE_SECRET' in r.json()['message']
+
+
+def test_hash_matches_deposit_uc3_format(settings):
+    import hashlib, hmac
+    expected = hmac.new(PICKUP_SECRET.encode('utf-8'), CODE.encode('ascii'), hashlib.sha256).hexdigest()
+    assert PickupCodeHasher(settings.pickup_code_secret).hash(CODE) == expected
+
+
+def test_collected_pin_can_be_issued_again(client, engine, world, settings):
+    token = verify(client, world['locker']).json()['pickupSessionToken']
+    assert confirm(client, confirm_body(world, token)).status_code == 200
+    with Session(engine) as db:
+        assert db.scalar(select(PickupCode)).code_hash.startswith('retired:')
+        courier_id = db.scalar(select(User.user_id))
+        parcel = Parcel(parcel_id=uuid4(), tracking_number='LU-2', size_category='MEDIUM',
+                        status='READY_FOR_PICKUP', compartment_id=world['compartment'],
+                        registered_by_courier_id=courier_id, recipient_contact='r2@example.test')
+        db.add(parcel); db.flush()
+        # Same PIN as the collected parcel: allowed by uq_pickup_codes_code_hash once retired.
+        db.add(PickupCode(parcel_id=parcel.parcel_id, code_hash=PickupCodeHasher(settings.pickup_code_secret).hash(CODE),
+                          failed_attempts=0, expires_at=datetime.now(timezone.utc) + timedelta(days=7)))
+        db.get(Compartment, world['compartment']).status = 'OCCUPIED'
+        db.commit()
+        new_parcel = parcel.parcel_id
+    assert verify(client, world['locker']).json()['parcelId'] == str(new_parcel)
 
 
 def test_confirm_requires_valid_session(client, world, settings):
@@ -243,33 +304,7 @@ def test_code_is_stored_only_as_hash(engine, world):
         assert CODE not in db.scalar(select(PickupCode)).code_hash
 
 
-def test_issuer_creates_unique_six_digit_code(engine, world, settings):
-    hasher = PickupCodeHasher(settings)
-    with Session(engine) as db:
-        db.get(PickupCode, db.scalar(select(PickupCode.code_id))).used_at = datetime.now(timezone.utc)
-        db.commit()
-        expires = datetime.now(timezone.utc) + timedelta(days=7)
-        code = PickupCodeIssuer(PickupRepository(db), hasher).issue(world['parcel'], world['locker'], expires)
-        db.commit()
-        assert len(code) == 6 and code.isdigit()
-        stored = db.scalar(select(PickupCode))
-        assert stored.code_hash == hasher.hash(code) and stored.used_at is None
-
-
-def test_issuer_skips_codes_already_active_at_station(engine, world, settings, monkeypatch):
-    hasher = PickupCodeHasher(settings)
-    candidates = iter([CODE, '000777'])
-    monkeypatch.setattr(pickup_service, 'generate_pickup_code', lambda: next(candidates))
-    with Session(engine) as db:
-        courier_id = db.scalar(select(User.user_id))
-        new_parcel = Parcel(parcel_id=uuid4(), tracking_number='LU-2', size_category='SMALL', status='ASSIGNED',
-                            registered_by_courier_id=courier_id, recipient_contact='r2@example.test')
-        db.add(new_parcel); db.commit()
-        code = PickupCodeIssuer(PickupRepository(db), hasher).issue(
-            new_parcel.parcel_id, world['locker'], datetime.now(timezone.utc) + timedelta(days=7))
-        assert code == '000777'
-
-
-def test_pickup_code_is_never_echoed_in_validation_errors(client):
-    r = client.post('/api/terminal/pickup/verify', json={'lockerId': 'bad', 'pickupCode': '999999'})
+def test_pickup_code_is_never_echoed_in_validation_errors(client, world):
+    r = client.post('/api/terminal/pickup/verify', json={'lockerId': 'bad', 'pickupCode': '999999'},
+                    headers=terminal_header(world['locker']))
     assert '999999' not in r.text

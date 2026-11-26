@@ -1,38 +1,33 @@
 """Pickup credential primitives (FR_01, NFR_02).
 
-* Pickup codes are 6-digit PINs drawn from a CSPRNG. Only a keyed HMAC of the
-  PIN is stored, so a database leak alone does not reveal live PINs, while the
-  terminal can still look a PIN up in a single indexed query (NFR_03).
+* Pickup codes are 6-digit PINs created by the deposit flow (UC3). Only
+  HMAC-SHA256(PICKUP_CODE_SECRET, pin) as hex is stored, so a database leak
+  alone does not reveal live PINs, while the terminal can still look a PIN up
+  in a single indexed query (NFR_03). This must stay byte-for-byte identical
+  to UC3's ``PickupCodeIssuer.hash_code``.
 * A successful verify returns a short-lived signed pickup session token. The
   terminal must present it to confirm collection, so knowing a parcel ID is
   not enough to mark a parcel collected or free its compartment.
 """
 import hashlib
 import hmac
-import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 import jwt
+from pydantic import SecretStr
 from app.config import Settings
 
-PICKUP_CODE_DIGITS = 6
 PICKUP_SESSION_TTL = timedelta(minutes=10)
 _SESSION_AUDIENCE = 'smart-locker-terminal-pickup'
 
 
-def generate_pickup_code() -> str:
-    return f'{secrets.randbelow(10 ** PICKUP_CODE_DIGITS):0{PICKUP_CODE_DIGITS}d}'
-
-
 class PickupCodeHasher:
-    def __init__(self, settings: Settings):
-        # Domain-separated key derived from the server secret; never stored.
-        self._key = hmac.new(settings.jwt_secret.get_secret_value().encode(),
-                             b'pickup-code-hmac-v1', hashlib.sha256).digest()
+    def __init__(self, secret: SecretStr):
+        self._key = secret.get_secret_value().encode('utf-8')
 
     def hash(self, code: str) -> str:
-        return hmac.new(self._key, code.encode(), hashlib.sha256).hexdigest()
+        return hmac.new(self._key, code.encode('ascii'), hashlib.sha256).hexdigest()
 
 
 class InvalidPickupSession(Exception):

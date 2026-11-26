@@ -48,9 +48,6 @@ class PickupRepository:
         ).first()
         return None if row is None else (row[0], row[1], row[2])
 
-    def code_hash_in_use(self, locker_id: UUID, code_hash: str, now: datetime) -> bool:
-        return self.find_active_code(locker_id, code_hash, now) is not None
-
     def lock_parcel(self, parcel_id: UUID) -> Parcel | None:
         return self.db.scalars(select(Parcel).where(Parcel.parcel_id == parcel_id)
                                .with_for_update().execution_options(populate_existing=True)).first()
@@ -62,6 +59,3 @@ class PickupRepository:
     def lock_compartment(self, compartment_id: UUID) -> Compartment | None:
         return self.db.scalars(select(Compartment).where(Compartment.compartment_id == compartment_id)
                                .with_for_update().execution_options(populate_existing=True)).first()
-
-    def add(self, entity) -> None:
-        self.db.add(entity)
