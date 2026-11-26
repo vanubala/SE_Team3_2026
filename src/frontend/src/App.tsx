@@ -9,6 +9,7 @@ import { TerminalCodePage } from "./pages/LockerTerminal/CodePage";
 import { TerminalDoorPage } from "./pages/LockerTerminal/DoorPage";
 import { TerminalHomePage } from "./pages/LockerTerminal/HomePage";
 import { CourierDashboard } from "./pages/CourierDashboard";
+import { AdminDashboard } from "./pages/AdminDashboard";
 
 function PlaceholderDashboard({ title }: { title: string }) {
   return (
@@ -48,10 +49,7 @@ export function App() {
           {/* Staff Dashboards (Temporarily unprotected for UI preview) */}
           <Route element={<LayoutShell />}>
             <Route path="/courier" element={<CourierDashboard />} />
-            <Route
-              path="/admin"
-              element={<PlaceholderDashboard title="Admin Dashboard" />}
-            />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />
