@@ -1,9 +1,0 @@
-__pycache__/
-.pytest_cache/
-.venv/
-.coverage
-.env
-*.pyc
-*.sqlite3
-.ruff_cache/
-.DS_Store
