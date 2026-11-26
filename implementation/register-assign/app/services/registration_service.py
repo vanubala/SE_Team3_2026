@@ -12,7 +12,9 @@ from .sizes import parse_size
 
 TRACKING_NUMBER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{2,63}")
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
-PHONE = re.compile(r"\+?[0-9]{7,15}")
+# International format (E.164): "+", then the country code and number. The SMS sender of the deposit module
+# only accepts this format.
+PHONE = re.compile(r"\+[1-9][0-9]{7,14}")
 CONTACT_MAX_LENGTH = 254  # longest email address that can be delivered (RFC 5321); the column holds 255
 NOTES_MAX_LENGTH = 500
 
@@ -88,7 +90,10 @@ class RegistrationService:
         else:
             contact = contact.replace(" ", "")
             if not PHONE.fullmatch(contact):
-                raise InvalidParcelData("Recipient contact must be an email address or a phone number")
+                raise InvalidParcelData(
+                    "Recipient contact must be an email address or a phone number with country code, "
+                    "such as +352621123456"
+                )
 
         if form.expected_delivery.tzinfo is None:
             raise InvalidParcelData("Expected delivery must include a time zone")
