@@ -7,7 +7,7 @@
 | Input | courier ID, parcel form | courier ID, status (optional) |
 | Returns | the saved parcel | the courier's parcels, oldest first |
 | Errors | `InvalidParcelData`, `DuplicateTrackingNumber`, `StorageError` | `InvalidParcelData` (unknown status) |
-| Rules | one parcel per tracking number; status `REGISTERED`; pickup deadline empty; nothing saved on error | only the courier's own parcels |
+| Rules | one parcel per tracking number; recipient contact is an email address or a phone number with country code (`+352621123456`); status `REGISTERED`; pickup deadline empty; nothing saved on error | only the courier's own parcels |
 
 ## AssignmentService
 

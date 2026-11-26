@@ -77,7 +77,7 @@ def test_rejects_an_unknown_size(uow):
 @pytest.mark.parametrize("contact, stored", [
     ("recipient@example.lu", "recipient@example.lu"),
     ("+352 621 123 456", "+352621123456"),
-    ("621123456", "621123456"),
+    ("+33612345678", "+33612345678"),
 ])
 def test_accepts_an_email_address_or_a_phone_number(uow, contact, stored):
     parcel = service(uow).register_parcel(COURIER_1, form(recipient_contact=contact))
@@ -85,7 +85,10 @@ def test_accepts_an_email_address_or_a_phone_number(uow, contact, stored):
     assert parcel.recipient_contact == stored
 
 
-@pytest.mark.parametrize("contact", ["", "recipient@", "@example.lu", "12345", "call me"])
+@pytest.mark.parametrize("contact", [
+    "", "recipient@", "@example.lu", "call me",
+    "621123456", "00352621123456", "+0352621123456", "+12345",  # no "+" and country code, or too short
+])
 def test_rejects_a_contact_that_is_neither(uow, contact):
     with pytest.raises(InvalidParcelData):
         service(uow).register_parcel(COURIER_1, form(recipient_contact=contact))
