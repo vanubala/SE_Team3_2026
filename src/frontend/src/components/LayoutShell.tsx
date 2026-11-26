@@ -39,7 +39,7 @@ export function LayoutShell() {
                 size="small"
                 sx={styles.terminalLinkBtn}
               >
-                Kiosk Terminal ↗
+                Open Terminal View ↗
               </Button>
 
               {user && (
@@ -142,5 +142,10 @@ const styles: Record<string, SxProps<Theme>> = {
     "&:hover": {
       bgcolor: "primary.dark",
     },
+  },
+  mainContent: {
+    pt: 5,
+    pb: 6,
+    flex: 1,
   },
 };

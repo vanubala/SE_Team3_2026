@@ -8,6 +8,7 @@ import { LoginUI } from "./pages/LoginUI";
 import { TerminalCodePage } from "./pages/LockerTerminal/CodePage";
 import { TerminalDoorPage } from "./pages/LockerTerminal/DoorPage";
 import { TerminalHomePage } from "./pages/LockerTerminal/HomePage";
+import { CourierDashboard } from "./pages/CourierDashboard";
 
 function PlaceholderDashboard({ title }: { title: string }) {
   return (
@@ -46,10 +47,7 @@ export function App() {
 
           {/* Staff Dashboards (Temporarily unprotected for UI preview) */}
           <Route element={<LayoutShell />}>
-            <Route
-              path="/courier"
-              element={<PlaceholderDashboard title="Courier Dashboard" />}
-            />
+            <Route path="/courier" element={<CourierDashboard />} />
             <Route
               path="/admin"
               element={<PlaceholderDashboard title="Admin Dashboard" />}

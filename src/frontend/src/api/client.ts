@@ -32,7 +32,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   } catch {
-    throw new ApiError("Unable to reach the SPLS server.", 0, "NETWORK");
+    throw new ApiError("Unable to reach the server.", 0, "NETWORK");
   }
 
   const data = await response.json().catch(() => ({}));
