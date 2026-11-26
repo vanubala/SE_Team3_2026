@@ -122,7 +122,9 @@ class Parcel(Base):
 
 class PickupCode(Base):
     __tablename__ = 'pickup_codes'
-    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_pickup_codes_attempts'),)
+    __table_args__ = (CheckConstraint('failed_attempts >= 0', name='ck_pickup_codes_attempts'),
+                      # Added by migration 0002_unique_pickup_code_hash (UC3).
+                      UniqueConstraint('code_hash', name='uq_pickup_codes_code_hash'),)
     code_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     parcel_id: Mapped[UUID] = mapped_column(ForeignKey('parcels.parcel_id'), unique=True)
     code_hash: Mapped[str] = mapped_column(String(255))

@@ -1,13 +1,13 @@
 """Terminal-wide pickup lockout state (NFR_02).
 
-Revision ID: 0002_terminal_lockouts
-Revises: 0001_mvp_schema
+Revision ID: 0003_terminal_lockouts
+Revises: 0002_unique_pickup_code_hash
 """
 from alembic import op
 import sqlalchemy as sa
 
-revision = '0002_terminal_lockouts'
-down_revision = '0001_mvp_schema'
+revision = '0003_terminal_lockouts'
+down_revision = '0002_unique_pickup_code_hash'
 branch_labels = None
 depends_on = None
 
