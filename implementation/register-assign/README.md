@@ -1,6 +1,6 @@
 # Registration and assignment
 
-Backend for UC1 Register Parcel and UC2 Assign Compartment (FR_02, FR_03, FR_04, NFR_04). The design is in `Software-Architecture/Modular-Design.md`, the sequence diagrams `SD-Register` and `SD-Assign`, and `Schemas-Endpoints.md`. The functions of each layer are listed in [CONTRACTS.md](CONTRACTS.md).
+Backend for UC1 Register Parcel and UC2 Assign Compartment (FR_02, FR_03, FR_04, NFR_04). The design is in `docs/Software-Architecture/Modular-Design.md`, the sequence diagrams `SD-Register` and `SD-Assign`, and `Schemas-Endpoints.md`. The functions of each layer are listed in [CONTRACTS.md](CONTRACTS.md).
 
 ## Folders
 
@@ -29,6 +29,8 @@ TEST_DATABASE_URL=postgresql+psycopg://user@localhost:5432/smart_locker_test .ve
 
 The tests in `tests/test_concurrency.py` only run on PostgreSQL. They send requests at the same time and check that a compartment is never reserved twice, that a parcel never gets two compartments, that a tracking number is never saved twice and that no compartment is reserved while its locker is being set offline (NFR_04).
 
+On GitHub, `.github/workflows/register-assign.yml` runs the linter and all tests, on SQLite and PostgreSQL, for every pull request and push that changes this folder.
+
 ## Run the API
 
 Environment variables:
@@ -54,6 +56,6 @@ API docs: `http://127.0.0.1:8000/docs`.
 
 ## Other modules
 
-- `app/models.py` is a copy of the tables in `Schemas-Endpoints.md`, so that this module can run on its own. The shared models are in Christos's `backend/` (pull request #39).
+- `app/models.py` is a copy of the tables in `Schemas-Endpoints.md`, so that this module can run on its own. The shared models are in Christos's `src/backend/` (pull request #39).
 - Tokens come from the authentication module (pull request #39). This module accepts HS256 tokens with issuer `smart-locker-auth` and audience `smart-locker-api` (set with `JWT_ISSUER` and `JWT_AUDIENCE`) and the claims `sub` (the user's UUID), `role` (`COURIER`) and `exp`.
 - `LockerRepository.reserve_compartment` has the same signature as in Raed's admin module (pull request #38).
