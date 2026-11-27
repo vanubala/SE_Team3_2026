@@ -41,8 +41,15 @@ def seed_demo(db: Session, courier_password: str, admin_password: str) -> None:
             db.add(Locker(locker_id=lid,name=name,address='Synthetic demo address',
                           gps_location='49.60,6.10',opening_hours='24/7',instructions='Simulation only'))
         db.flush()
-        for number,size in enumerate([SizeCategory.SMALL,SizeCategory.SMALL,SizeCategory.MEDIUM,
-                                      SizeCategory.MEDIUM,SizeCategory.LARGE,SizeCategory.LARGE],1):
+        compartment_sizes = [
+            SizeCategory.SMALL, SizeCategory.SMALL, SizeCategory.SMALL, SizeCategory.SMALL,
+            SizeCategory.MEDIUM, SizeCategory.MEDIUM, SizeCategory.MEDIUM, SizeCategory.MEDIUM,
+            SizeCategory.LARGE, SizeCategory.LARGE, SizeCategory.LARGE, SizeCategory.LARGE,
+        ]
+        for number, size in enumerate(compartment_sizes, 1):
+            cid = demo_id(f'{label}:{number}')
+            if db.get(Compartment, cid) is None:
+                db.add(Compartment(compartment_id=cid, locker_id=lid, compartment_number=number, size_category=size.value))
             cid=demo_id(f'{label}:{number}')
             if db.get(Compartment,cid) is None:
                 db.add(Compartment(compartment_id=cid,locker_id=lid,compartment_number=number,size_category=size.value))

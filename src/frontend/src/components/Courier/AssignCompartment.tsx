@@ -28,86 +28,20 @@ interface AssignCompartmentDialogProps {
 
 const STATIONS = [
   {
-    id: "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
-    name: "Maison du Savoir — Belval Campus",
+    id: "a3f29f83-9012-52e1-91bf-d7ee39675c03",
+    name: "Campus Belval — Luxembourg",
+  },
+  {
+    id: "cb082482-832d-5cf7-93cd-b67d41673665",
+    name: "Campus Kirchberg — Luxembourg",
   },
 ];
 
-// Add this temporary preview array at the top of AssignCompartment.tsx (remove once backend is connected)
-const PREVIEW_COMPARTMENTS: Compartment[] = [
-  {
-    compartmentId: "c-01",
-    compartmentNumber: 1,
-    sizeCategory: "SMALL",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-02",
-    compartmentNumber: 2,
-    sizeCategory: "SMALL",
-    status: "OCCUPIED",
-  },
-  {
-    compartmentId: "c-03",
-    compartmentNumber: 3,
-    sizeCategory: "SMALL",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-04",
-    compartmentNumber: 4,
-    sizeCategory: "SMALL",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-05",
-    compartmentNumber: 5,
-    sizeCategory: "MEDIUM",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-06",
-    compartmentNumber: 6,
-    sizeCategory: "MEDIUM",
-    status: "RESERVED",
-  },
-  {
-    compartmentId: "c-07",
-    compartmentNumber: 7,
-    sizeCategory: "MEDIUM",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-08",
-    compartmentNumber: 8,
-    sizeCategory: "MEDIUM",
-    status: "OCCUPIED",
-  },
-  {
-    compartmentId: "c-09",
-    compartmentNumber: 9,
-    sizeCategory: "LARGE",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-10",
-    compartmentNumber: 10,
-    sizeCategory: "LARGE",
-    status: "MAINTENANCE",
-  },
-  {
-    compartmentId: "c-11",
-    compartmentNumber: 11,
-    sizeCategory: "LARGE",
-    status: "AVAILABLE",
-  },
-  {
-    compartmentId: "c-12",
-    compartmentNumber: 12,
-    sizeCategory: "LARGE",
-    status: "AVAILABLE",
-  },
-];
+const SIZE_RANK: Record<Parcel["sizeCategory"], number> = {
+  SMALL: 0,
+  MEDIUM: 1,
+  LARGE: 2,
+};
 
 export function AssignCompartmentDialog({
   parcel,
@@ -146,15 +80,11 @@ export function AssignCompartmentDialog({
       })
       .catch((err) => {
         if (cancelled) return;
-        // Temporary offline preview fallback — remove when backend is running
-        setCompartments(PREVIEW_COMPARTMENTS);
-        setRecommendedId("c-07");
-        setSelectedCompId("c-07");
-        // setError(
-        //   err instanceof ApiError
-        //     ? err.message
-        //     : "Unable to load available compartments."
-        // );
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Unable to load available compartments."
+        );
       })
       .finally(() => {
         if (!cancelled) setLoadingOptions(false);
@@ -241,7 +171,10 @@ export function AssignCompartmentDialog({
                 compartments={compartments}
                 selectedCompartmentId={selectedCompId}
                 recommendedCompartmentId={recommendedId}
-                isSelectable={(comp) => comp.status === "AVAILABLE"}
+                isSelectable={(comp) =>
+                  comp.status === "AVAILABLE" &&
+                  SIZE_RANK[comp.sizeCategory] >= SIZE_RANK[parcel.sizeCategory]
+                }
                 onSelectCompartment={(comp) =>
                   setSelectedCompId(comp.compartmentId)
                 }

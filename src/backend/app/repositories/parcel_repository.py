@@ -45,5 +45,6 @@ class ParcelRepository:
             update(Parcel)
             .where(Parcel.parcel_id == parcel_id, Parcel.status == ParcelStatus.REGISTERED)
             .values(status=ParcelStatus.ASSIGNED, compartment_id=compartment_id)
+            .execution_options(synchronize_session="fetch")
         )
         return result.rowcount == 1

@@ -5,7 +5,7 @@ export interface RegisterParcelInput {
   trackingNumber: string;
   sizeCategory: SizeCategory;
   recipientContact: string;
-  expectedDelivery: string; // ISO string
+  expectedDelivery: string;
   preferredLockerId?: string;
   notes?: string;
 }
@@ -32,41 +32,40 @@ export interface LockerDetails {
   operationalStatus: "ONLINE" | "OFFLINE" | "MAINTENANCE";
 }
 
-// Raw FastAPI snake_case DTOs from Member 3's schemas
-interface RawParcel {
-  parcel_id: string;
-  tracking_number: string;
-  size_category: SizeCategory;
+interface ApiParcelDto {
+  parcelId: string;
+  trackingNumber: string;
+  sizeCategory?: SizeCategory;
   status: Parcel["status"];
-  preferred_locker_id?: string | null;
-  compartment_id?: string | null;
-  compartment_number?: number | null;
-  recipient_contact?: string;
-  expected_delivery?: string | null;
+  preferredLockerId?: string | null;
+  compartmentId?: string | null;
+  compartmentNumber?: number | null;
+  recipientContact?: string;
+  expectedDelivery?: string | null;
   notes?: string | null;
-  registered_at?: string | null;
+  registeredAt?: string | null;
 }
 
-interface RawCompartment {
-  compartment_id: string;
-  compartment_number: number;
-  size_category: SizeCategory;
-  status: Compartment["status"];
+interface ApiCompartmentDto {
+  compartmentId: string;
+  compartmentNumber: number;
+  sizeCategory: SizeCategory;
+  status?: Compartment["status"];
 }
 
-function mapParcel(raw: RawParcel): Parcel {
+function mapParcel(dto: ApiParcelDto, fallback?: Partial<Parcel>): Parcel {
   return {
-    parcelId: raw.parcel_id,
-    trackingNumber: raw.tracking_number,
-    sizeCategory: raw.size_category,
-    status: raw.status,
-    preferredLockerId: raw.preferred_locker_id ?? undefined,
-    compartmentId: raw.compartment_id ?? undefined,
-    compartmentNumber: raw.compartment_number ?? undefined,
-    recipientContact: raw.recipient_contact ?? "",
-    expectedDelivery: raw.expected_delivery ?? undefined,
-    notes: raw.notes ?? undefined,
-    registeredAt: raw.registered_at ?? undefined,
+    parcelId: dto.parcelId,
+    trackingNumber: dto.trackingNumber,
+    sizeCategory: dto.sizeCategory ?? fallback?.sizeCategory ?? "MEDIUM",
+    status: dto.status,
+    preferredLockerId: dto.preferredLockerId ?? fallback?.preferredLockerId,
+    compartmentId: dto.compartmentId ?? fallback?.compartmentId,
+    compartmentNumber: dto.compartmentNumber ?? fallback?.compartmentNumber,
+    recipientContact: dto.recipientContact ?? fallback?.recipientContact ?? "",
+    expectedDelivery: dto.expectedDelivery ?? fallback?.expectedDelivery,
+    notes: dto.notes ?? fallback?.notes,
+    registeredAt: dto.registeredAt ?? fallback?.registeredAt,
   };
 }
 
@@ -75,24 +74,37 @@ export const courierApi = {
   listParcels: async (status?: string): Promise<Parcel[]> => {
     const query =
       status && status !== "ALL" ? `?status=${encodeURIComponent(status)}` : "";
-    const rawList = await apiRequest<RawParcel[]>(`/parcels${query}`);
-    return rawList.map(mapParcel);
+    const list = await apiRequest<ApiParcelDto[]>(`/parcels${query}`);
+    return list.map((item) => mapParcel(item));
   },
 
-  // UC1: Register a new parcel
+  // UC1: Register a new parcel (RegisterParcelIn expects camelCase)
   registerParcel: async (input: RegisterParcelInput): Promise<Parcel> => {
-    const raw = await apiRequest<RawParcel>("/parcels", {
+    const trimmedTracking = input.trackingNumber.trim();
+    const trimmedContact = input.recipientContact.trim();
+    const isoDelivery = new Date(input.expectedDelivery).toISOString();
+    const trimmedLocker = input.preferredLockerId?.trim() || null;
+    const trimmedNotes = input.notes?.trim() || null;
+
+    const dto = await apiRequest<ApiParcelDto>("/parcels", {
       method: "POST",
       body: JSON.stringify({
-        tracking_number: input.trackingNumber.trim(),
-        size_category: input.sizeCategory,
-        recipient_contact: input.recipientContact.trim(),
-        expected_delivery: new Date(input.expectedDelivery).toISOString(),
-        preferred_locker_id: input.preferredLockerId?.trim() || null,
-        notes: input.notes?.trim() || null,
+        trackingNumber: trimmedTracking,
+        sizeCategory: input.sizeCategory,
+        recipientContact: trimmedContact,
+        expectedDelivery: isoDelivery,
+        preferredLockerId: trimmedLocker,
+        notes: trimmedNotes,
       }),
     });
-    return mapParcel(raw);
+
+    return mapParcel(dto, {
+      sizeCategory: input.sizeCategory,
+      recipientContact: trimmedContact,
+      expectedDelivery: isoDelivery,
+      preferredLockerId: trimmedLocker ?? undefined,
+      notes: trimmedNotes ?? undefined,
+    });
   },
 
   // UC2: Fetch available compartments + smallest-fit recommendation
@@ -100,72 +112,61 @@ export const courierApi = {
     lockerId: string,
     size: SizeCategory
   ): Promise<AvailableCompartmentsResult> => {
-    const raw = await apiRequest<{
-      locker_id: string;
-      recommended_compartment_id: string;
-      available_compartments: RawCompartment[];
+    const res = await apiRequest<{
+      lockerId: string;
+      recommendedCompartmentId: string;
+      availableCompartments: ApiCompartmentDto[];
     }>(`/lockers/${encodeURIComponent(lockerId)}/compartments?size=${size}`);
 
     return {
-      lockerId: raw.locker_id,
-      recommendedCompartmentId: raw.recommended_compartment_id,
-      availableCompartments: raw.available_compartments.map((c) => ({
-        compartmentId: c.compartment_id,
-        compartmentNumber: c.compartment_number,
-        sizeCategory: c.size_category,
-        status: c.status,
+      lockerId: res.lockerId,
+      recommendedCompartmentId: res.recommendedCompartmentId,
+      availableCompartments: res.availableCompartments.map((c) => ({
+        compartmentId: c.compartmentId,
+        compartmentNumber: c.compartmentNumber,
+        sizeCategory: c.sizeCategory,
+        status: c.status ?? "AVAILABLE",
       })),
     };
   },
 
-  // UC2: Assign compartment to a REGISTERED parcel
+  // UC2: Assign compartment to a REGISTERED parcel (AssignIn expects camelCase)
   assignCompartment: async (
     parcelId: string,
     lockerId: string,
     compartmentId: string
   ): Promise<AssignCompartmentResult> => {
-    const raw = await apiRequest<{
-      parcel_id: string;
-      status: Parcel["status"];
-      locker_id: string;
-      compartment_id: string;
-      compartment_number: number;
-    }>(`/parcels/${encodeURIComponent(parcelId)}/assign`, {
-      method: "POST",
-      body: JSON.stringify({
-        locker_id: lockerId,
-        compartment_id: compartmentId,
-      }),
-    });
-
-    return {
-      parcelId: raw.parcel_id,
-      status: raw.status,
-      lockerId: raw.locker_id,
-      compartmentId: raw.compartment_id,
-      compartmentNumber: raw.compartment_number,
-    };
+    return apiRequest<AssignCompartmentResult>(
+      `/parcels/${encodeURIComponent(parcelId)}/assign`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          lockerId,
+          compartmentId,
+        }),
+      }
+    );
   },
 
   getLockerDetails: async (lockerId: string): Promise<LockerDetails> => {
     const raw = await apiRequest<{
-      locker_id?: string;
       lockerId?: string;
+      locker_id?: string;
       name: string;
       address?: string;
-      opening_hours?: string;
       openingHours?: string;
-      operational_status?: LockerDetails["operationalStatus"];
+      opening_hours?: string;
       operationalStatus?: LockerDetails["operationalStatus"];
+      operational_status?: LockerDetails["operationalStatus"];
     }>(`/lockers/${encodeURIComponent(lockerId)}`);
 
     return {
-      lockerId: (raw.locker_id ?? raw.lockerId ?? lockerId) as string,
+      lockerId: (raw.lockerId ?? raw.locker_id ?? lockerId) as string,
       name: raw.name,
       address: raw.address ?? "Address unavailable",
-      openingHours: raw.opening_hours ?? raw.openingHours ?? "24/7",
-      operationalStatus: (raw.operational_status ??
-        raw.operationalStatus ??
+      openingHours: raw.openingHours ?? raw.opening_hours ?? "24/7",
+      operationalStatus: (raw.operationalStatus ??
+        raw.operational_status ??
         "ONLINE") as LockerDetails["operationalStatus"],
     };
   },
