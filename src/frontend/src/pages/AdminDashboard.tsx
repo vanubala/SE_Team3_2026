@@ -27,6 +27,7 @@ import {
   type Compartment,
   type LockerOperationalStatus,
 } from "../types/domain";
+import { StationStatusDialog } from "../components/Admin/LockerStatus";
 
 // Temporary preview station used only when the backend server is unreachable — remove at integration
 const PREVIEW_STATION: AdminLockerOverview = {
@@ -159,6 +160,8 @@ export function AdminDashboard() {
   const [isOfflinePreview, setIsOfflinePreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stationUpdating, setStationUpdating] = useState(false);
+  const [pendingStationStatus, setPendingStationStatus] =
+    useState<LockerOperationalStatus | null>(null);
 
   const [feedback, setFeedback] = useState<{
     severity: "success" | "warning" | "error";
@@ -307,6 +310,7 @@ export function AdminDashboard() {
             : st
         )
       );
+      setPendingStationStatus(null);
       setFeedback({
         severity: nextStatus === "ONLINE" ? "success" : "warning",
         message: `Station "${currentStation.name}" is now ${nextStatus}.`,
@@ -337,6 +341,7 @@ export function AdminDashboard() {
       });
     } finally {
       setStationUpdating(false);
+      setPendingStationStatus(null);
     }
   };
 
@@ -439,11 +444,15 @@ export function AdminDashboard() {
                   label="Station Operational Status"
                   value={currentStation.operationalStatus}
                   disabled={stationUpdating}
-                  onChange={(e) =>
-                    handleStationStatusChange(
-                      e.target.value as LockerOperationalStatus
-                    )
-                  }
+                  onChange={(e) => {
+                    const next = e.target.value as LockerOperationalStatus;
+                    if (
+                      currentStation &&
+                      next !== currentStation.operationalStatus
+                    ) {
+                      setPendingStationStatus(next);
+                    }
+                  }}
                   sx={styles.statusSelect}
                 >
                   <MenuItem value="ONLINE">ONLINE (In Service)</MenuItem>
@@ -477,6 +486,21 @@ export function AdminDashboard() {
         error={compError}
         onClose={() => setActiveCompartment(null)}
         onConfirmStatus={handleConfirmCompartmentStatus}
+      />
+
+      <StationStatusDialog
+        stationName={currentStation?.name ?? ""}
+        currentStatus={currentStation?.operationalStatus ?? "ONLINE"}
+        pendingStatus={pendingStationStatus}
+        activeParcelCount={
+          currentStation
+            ? currentStation.occupancy.reserved +
+              currentStation.occupancy.occupied
+            : 0
+        }
+        submitting={stationUpdating}
+        onClose={() => setPendingStationStatus(null)}
+        onConfirm={handleStationStatusChange}
       />
     </Box>
   );

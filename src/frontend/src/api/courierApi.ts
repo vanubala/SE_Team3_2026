@@ -24,6 +24,14 @@ export interface AssignCompartmentResult {
   compartmentNumber: number;
 }
 
+export interface LockerDetails {
+  lockerId: string;
+  name: string;
+  address: string;
+  openingHours: string;
+  operationalStatus: "ONLINE" | "OFFLINE" | "MAINTENANCE";
+}
+
 // Raw FastAPI snake_case DTOs from Member 3's schemas
 interface RawParcel {
   parcel_id: string;
@@ -136,6 +144,29 @@ export const courierApi = {
       lockerId: raw.locker_id,
       compartmentId: raw.compartment_id,
       compartmentNumber: raw.compartment_number,
+    };
+  },
+
+  getLockerDetails: async (lockerId: string): Promise<LockerDetails> => {
+    const raw = await apiRequest<{
+      locker_id?: string;
+      lockerId?: string;
+      name: string;
+      address?: string;
+      opening_hours?: string;
+      openingHours?: string;
+      operational_status?: LockerDetails["operationalStatus"];
+      operationalStatus?: LockerDetails["operationalStatus"];
+    }>(`/lockers/${encodeURIComponent(lockerId)}`);
+
+    return {
+      lockerId: (raw.locker_id ?? raw.lockerId ?? lockerId) as string,
+      name: raw.name,
+      address: raw.address ?? "Address unavailable",
+      openingHours: raw.opening_hours ?? raw.openingHours ?? "24/7",
+      operationalStatus: (raw.operational_status ??
+        raw.operationalStatus ??
+        "ONLINE") as LockerDetails["operationalStatus"],
     };
   },
 };

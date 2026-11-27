@@ -11,6 +11,7 @@ import {
 import { courierApi, type RegisterParcelInput } from "../api/courierApi";
 import { AssignCompartmentDialog } from "../components/Courier/AssignCompartment";
 import { CourierStatsRow } from "../components/Courier/CourierStats";
+import { LockerInfoDialog } from "../components/Courier/LockerInfo";
 import { ParcelListTable } from "../components/Courier/ParcelList";
 import { RegisterParcelDialog } from "../components/Courier/RegisterForm";
 import { useAuth } from "../context/AuthContext";
@@ -32,18 +33,11 @@ export function CourierDashboard() {
   const [registerSubmitting, setRegisterSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
 
-  // UC2 Compartment Assignment dialog state
-  //const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>(null);
-
-  // Temporary preview state in CourierDashboard.tsx to inspect the modal immediately:
-  const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>({
-    parcelId: "p-preview-01",
-    trackingNumber: "LU-2026-88412",
-    sizeCategory: "MEDIUM",
-    status: "REGISTERED",
-    preferredLockerId: "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa",
-    recipientContact: "recipient@example.lu",
-  });
+  // UC2 Compartment Assignment & Locker Info dialog states
+  const [parcelToAssign, setParcelToAssign] = useState<Parcel | null>(null);
+  const [parcelForLockerInfo, setParcelForLockerInfo] = useState<Parcel | null>(
+    null
+  );
 
   const loadParcels = useCallback(async () => {
     setLoading(true);
@@ -142,6 +136,7 @@ export function CourierDashboard() {
         loading={loading}
         onFilterChange={setStatusFilter}
         onOpenAssign={setParcelToAssign}
+        onViewLockerInfo={setParcelForLockerInfo}
       />
 
       <RegisterParcelDialog
@@ -157,6 +152,11 @@ export function CourierDashboard() {
         onClose={() => setParcelToAssign(null)}
         onAssigned={handleCompartmentAssigned}
       />
+
+      <LockerInfoDialog
+        parcel={parcelForLockerInfo}
+        onClose={() => setParcelForLockerInfo(null)}
+      />
     </Box>
   );
 }
@@ -171,10 +171,6 @@ const styles: Record<string, SxProps<Theme>> = {
   greeting: {
     fontWeight: 800,
     color: "text.primary",
-  },
-  subtitle: {
-    color: "text.secondary",
-    mt: 0.5,
   },
   registerCtaBtn: {
     bgcolor: "primary.main",

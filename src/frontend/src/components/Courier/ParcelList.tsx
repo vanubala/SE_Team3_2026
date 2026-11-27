@@ -24,6 +24,7 @@ interface ParcelListTableProps {
   loading: boolean;
   onFilterChange: (status: string) => void;
   onOpenAssign: (parcel: Parcel) => void;
+  onViewLockerInfo: (parcel: Parcel) => void;
 }
 
 const FILTERS = [
@@ -56,6 +57,7 @@ export function ParcelListTable({
   loading,
   onFilterChange,
   onOpenAssign,
+  onViewLockerInfo,
 }: ParcelListTableProps) {
   return (
     <Card elevation={0} sx={styles.tableCard}>
@@ -108,7 +110,8 @@ export function ParcelListTable({
             ) : parcels.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} sx={styles.emptyCell}>
-                  No parcels found. Click on "Register Parcel" to add one.
+                  No parcels found. Click on &ldquo;Register Parcel&rdquo; to
+                  add one.
                 </TableCell>
               </TableRow>
             ) : (
@@ -164,11 +167,14 @@ export function ParcelListTable({
                           Assign Locker
                         </Button>
                       ) : (
-                        <Typography variant="caption" sx={styles.mutedText}>
-                          {parcel.status === "ASSIGNED"
-                            ? "Ready for drop-off"
-                            : "Completed"}
-                        </Typography>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => onViewLockerInfo(parcel)}
+                          sx={styles.infoBtn}
+                        >
+                          Locker Info
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -262,6 +268,13 @@ const styles: Record<string, SxProps<Theme>> = {
     fontWeight: 700,
     borderRadius: 1.5,
     "&:hover": { bgcolor: "primary.dark" },
+  },
+  infoBtn: {
+    borderColor: "primary.main",
+    color: "primary.main",
+    fontWeight: 700,
+    borderRadius: 1.5,
+    "&:hover": { bgcolor: "#E3F2FD" },
   },
   emptyCell: {
     py: 5,
