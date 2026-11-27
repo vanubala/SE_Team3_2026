@@ -17,6 +17,7 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 PHONE = re.compile(r"\+[1-9][0-9]{7,14}")
 CONTACT_MAX_LENGTH = 254  # longest email address that can be delivered (RFC 5321); the column holds 255
 NOTES_MAX_LENGTH = 500
+DUPLICATE_MESSAGE = "A parcel with this tracking number is already registered"
 
 
 def utc_now() -> datetime:
@@ -45,7 +46,7 @@ class RegistrationService:
         Raises InvalidParcelData, DuplicateTrackingNumber or a database error. Nothing is saved on error."""
         form = self.sanitize_and_validate(form)
         if self.uow.parcels.exists_by_tracking_number(form.tracking_number):
-            raise DuplicateTrackingNumber("A parcel with this tracking number is already registered")
+            raise DuplicateTrackingNumber(DUPLICATE_MESSAGE)
         parcel = Parcel(
             parcel_id=self.generate_hashed_parcel_id(form.tracking_number),
             tracking_number=form.tracking_number,
@@ -59,7 +60,8 @@ class RegistrationService:
             registered_at=self.now(),
         )
         try:
-            self.uow.parcels.save(parcel)
+            if not self.uow.parcels.save(parcel):  # registered by someone else since the check above
+                raise DuplicateTrackingNumber(DUPLICATE_MESSAGE)
             self.uow.commit()
         except Exception:
             self.uow.rollback()
