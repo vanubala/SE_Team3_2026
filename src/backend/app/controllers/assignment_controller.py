@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from app.controllers.parcel_dependencies import Assignment, Courier, current_courier
-from app.schemas.parcels import AssignIn, AssignmentOut, AvailableCompartmentsOut, CompartmentOut, error_responses
+from app.schemas.parcels import AssignIn, AssignmentOut, AvailableCompartmentsOut, CompartmentOut, LockerOut, error_responses
 
 router = APIRouter(prefix="/api", tags=["Assignment"], dependencies=[Depends(current_courier)])
 
@@ -18,6 +18,12 @@ def get_available_compartments(locker_id: UUID, size: str, service: Assignment) 
         available_compartments=[CompartmentOut.model_validate(c) for c in compartments],
     )
 
+@router.get("/lockers/{locker_id}", responses=error_responses(401, 403, 404))
+def get_locker_details(locker_id: UUID, service: Assignment) -> LockerOut:
+    locker = service.uow.lockers.find_locker(locker_id)
+    # if locker is None:
+    #     raise LockerNotFound("Locker not found")
+    return LockerOut.model_validate(locker)
 
 @router.post("/parcels/{parcel_id}/assign", responses=error_responses(400, 401, 403, 404, 409))
 def assign_compartment(parcel_id: UUID, body: AssignIn, courier_id: Courier, service: Assignment) -> AssignmentOut:

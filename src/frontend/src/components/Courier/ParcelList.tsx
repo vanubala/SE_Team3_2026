@@ -35,8 +35,9 @@ const FILTERS = [
   { value: "COLLECTED", label: "Collected" },
 ];
 
-const LOCKER_NAMES: Record<string, string> = {
-  "84a16ee9-4133-4b14-b5ee-8d9e2256d6aa": "Maison du Savoir — Belval Campus",
+const STATION_NAMES: Record<string, string> = {
+  "a3f29f83-9012-52e1-91bf-d7ee39675c03": "Demo Belval Station",
+  "cb082482-832d-5cf7-93cd-b67d41673665": "Demo Kirchberg Station",
 };
 
 function formatDeliveryDate(iso?: string): string {
@@ -116,18 +117,21 @@ export function ParcelListTable({
               </TableRow>
             ) : (
               parcels.map((parcel) => {
-                const locationLabel = parcel.preferredLockerId
-                  ? LOCKER_NAMES[parcel.preferredLockerId] ??
-                    parcel.preferredLockerId
-                  : "Unassigned station";
-
                 return (
                   <TableRow key={parcel.parcelId} hover>
                     <TableCell sx={styles.monoCell}>
                       {parcel.parcelId}
                     </TableCell>
                     <TableCell sx={styles.locationCell}>
-                      {locationLabel}
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700, color: "text.primary" }}
+                      >
+                        {parcel.lockerName ||
+                          (parcel.preferredLockerId &&
+                            STATION_NAMES[parcel.preferredLockerId]) ||
+                          "Unassigned Station"}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip

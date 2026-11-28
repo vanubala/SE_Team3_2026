@@ -31,6 +31,7 @@ export interface Parcel {
   sizeCategory: SizeCategory;
   status: ParcelStatus;
   preferredLockerId?: string;
+  lockerName?: string;
   compartmentId?: string;
   compartmentNumber?: number;
   recipientContact: string;

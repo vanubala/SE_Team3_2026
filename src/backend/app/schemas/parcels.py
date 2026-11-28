@@ -51,6 +51,9 @@ class ParcelSummaryOut(ResponseBody):
     size_category: str
     status: str
     preferred_locker_id: UUID | None
+    locker_name: str | None = None
+    compartment_id: UUID | None = None
+    compartment_number: int | None = None
     expected_delivery: UtcDateTime | None
 
 
@@ -60,6 +63,12 @@ class CompartmentOut(ResponseBody):
     size_category: str
     status: str
 
+class LockerOut(ResponseBody):
+    locker_id: UUID
+    name: str
+    address: str
+    opening_hours: str
+    operational_status: str
 
 class AvailableCompartmentsOut(ResponseBody):
     locker_id: UUID

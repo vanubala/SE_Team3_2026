@@ -1,7 +1,7 @@
 """Saving and loading parcels."""
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -34,10 +34,32 @@ class ParcelRepository:
         return self.session.get(Parcel, parcel_id)
 
     def find_by_courier(self, courier_id: UUID, status: str | None = None) -> list[Parcel]:
-        query = select(Parcel).where(Parcel.registered_by_courier_id == courier_id)
+        from app.db.models import Compartment, Locker
+
+        query = (
+            select(Parcel, Compartment.compartment_number, Locker.locker_id, Locker.name)
+            .outerjoin(Compartment, Parcel.compartment_id == Compartment.compartment_id)
+            .outerjoin(
+                Locker,
+                Locker.locker_id == func.coalesce(Compartment.locker_id, Parcel.preferred_locker_id),
+            )
+            .where(Parcel.registered_by_courier_id == courier_id)
+        )
         if status is not None:
             query = query.where(Parcel.status == status)
-        return list(self.session.scalars(query.order_by(Parcel.registered_at, Parcel.tracking_number)))
+
+        rows = self.session.execute(
+            query.order_by(Parcel.registered_at, Parcel.tracking_number)
+        ).all()
+
+        parcels: list[Parcel] = []
+        for parcel, comp_num, resolved_locker_id, resolved_locker_name in rows:
+            parcel.compartment_number = comp_num
+            parcel.locker_name = resolved_locker_name
+            if resolved_locker_id is not None:
+                parcel.preferred_locker_id = resolved_locker_id
+            parcels.append(parcel)
+        return parcels
 
     def update_assignment(self, parcel_id: UUID, compartment_id: UUID) -> bool:
         # Only updates the parcel if it is still REGISTERED.

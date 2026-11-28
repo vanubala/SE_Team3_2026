@@ -38,6 +38,7 @@ interface ApiParcelDto {
   sizeCategory?: SizeCategory;
   status: Parcel["status"];
   preferredLockerId?: string | null;
+  lockerName?: string | null;
   compartmentId?: string | null;
   compartmentNumber?: number | null;
   recipientContact?: string;
@@ -60,6 +61,7 @@ function mapParcel(dto: ApiParcelDto, fallback?: Partial<Parcel>): Parcel {
     sizeCategory: dto.sizeCategory ?? fallback?.sizeCategory ?? "MEDIUM",
     status: dto.status,
     preferredLockerId: dto.preferredLockerId ?? fallback?.preferredLockerId,
+    lockerName: dto.lockerName ?? fallback?.lockerName,
     compartmentId: dto.compartmentId ?? fallback?.compartmentId,
     compartmentNumber: dto.compartmentNumber ?? fallback?.compartmentNumber,
     recipientContact: dto.recipientContact ?? fallback?.recipientContact ?? "",
