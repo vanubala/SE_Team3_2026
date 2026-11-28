@@ -1,7 +1,7 @@
 """Compartment assignment (UC2, FR_04, NFR_04)."""
 from uuid import UUID
 
-from app.db.models import Compartment, LockerStatus, Parcel, ParcelStatus, SizeCategory
+from app.db.models import Compartment, LockerStatus, Parcel, ParcelStatus, SizeCategory, CompartmentStatus
 from app.repositories.unit_of_work import UnitOfWork
 from app.services.parcel_errors import (
     CompartmentNotFound,
@@ -31,16 +31,21 @@ class AssignmentService:
     def get_available_and_recommended_compartments(
         self, locker_id: UUID, parcel_size: str
     ) -> tuple[Compartment, list[Compartment]]:
-        """Returns the recommended compartment and all AVAILABLE compartments of the locker that fit
-        the parcel, smallest first. The locker must be ONLINE.
-        Raises InvalidParcelData, LockerNotFound, LockerUnavailable or NoCompartmentAvailable."""
+        """Returns the recommended compartment and all compartments of the locker (all sizes and statuses)
+        so the UI can display the full cabinet while recommending the smallest fitting AVAILABLE door."""
         size = parse_size(parcel_size)
         self._check_locker_in_service(locker_id)
-        options = self.uow.lockers.find_available_compartments(locker_id, fitting_sizes(size))
-        if not options:
+        all_compartments = self.uow.lockers.find_all_compartments(locker_id)
+        allowed_sizes = set(fitting_sizes(size))
+        fitting_available = [
+            c
+            for c in all_compartments
+            if c.status == CompartmentStatus.AVAILABLE and c.size_category in allowed_sizes
+        ]
+        if not fitting_available:
             raise NoCompartmentAvailable("No suitable compartment available at this locker")
-        ordered = select_smallest_fitting_compartment(options)
-        return ordered[0], ordered
+        ordered_fitting = select_smallest_fitting_compartment(fitting_available)
+        return ordered_fitting[0], all_compartments
 
     def assign_compartment(
         self, courier_id: UUID, parcel_id: UUID, locker_id: UUID, compartment_id: UUID

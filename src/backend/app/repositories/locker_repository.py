@@ -25,7 +25,15 @@ class LockerRepository:
             Compartment.size_category.in_(sizes),
         )
         return list(self.session.scalars(query))
-
+    
+    def find_all_compartments(self, locker_id: UUID) -> list[Compartment]:
+        query = (
+            select(Compartment)
+            .where(Compartment.locker_id == locker_id)
+            .order_by(Compartment.compartment_number)
+        )
+        return list(self.session.scalars(query))
+    
     def reserve_compartment(self, locker_id: UUID, compartment_id: UUID) -> bool:
         # Shared lock on the locker row, so the locker cannot be set offline during the reservation. The caller commits.
         locker_status = self.session.scalar(

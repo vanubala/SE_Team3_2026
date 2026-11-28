@@ -117,7 +117,13 @@ export function AssignCompartmentDialog({
   };
 
   return (
-    <Dialog open={parcel !== null} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={parcel !== null}
+      onClose={submitting ? undefined : onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{ transition: { unmountOnExit: true } }}
+    >
       <DialogTitle sx={styles.dialogTitle}>
         Assign Locker Compartment — {parcel?.trackingNumber}
       </DialogTitle>
@@ -172,6 +178,7 @@ export function AssignCompartmentDialog({
                 selectedCompartmentId={selectedCompId}
                 recommendedCompartmentId={recommendedId}
                 isSelectable={(comp) =>
+                  parcel !== null &&
                   comp.status === "AVAILABLE" &&
                   SIZE_RANK[comp.sizeCategory] >= SIZE_RANK[parcel.sizeCategory]
                 }
@@ -185,10 +192,16 @@ export function AssignCompartmentDialog({
       </DialogContent>
 
       <DialogActions sx={styles.dialogActions}>
-        <Button onClick={onClose} disabled={submitting} sx={styles.cancelBtn}>
+        <Button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          sx={styles.cancelBtn}
+        >
           Cancel
         </Button>
         <Button
+          type="button"
           variant="contained"
           disabled={submitting || loadingOptions || !selectedCompId}
           onClick={handleConfirm}

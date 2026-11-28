@@ -58,6 +58,7 @@ class CompartmentOut(ResponseBody):
     compartment_id: UUID
     compartment_number: int
     size_category: str
+    status: str
 
 
 class AvailableCompartmentsOut(ResponseBody):
